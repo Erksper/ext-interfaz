@@ -1,0 +1,26 @@
+{
+    "routes": [
+        {
+            "route": "",
+            "params": {
+                "controller": "lista-usuarios",
+                "action": "index"
+            }
+        },
+        {
+            "route": "ListaUsuarios",
+            "params": {
+                "controller": "lista-usuarios",
+                "action": "index"
+            }
+        },
+        {
+            "route": "ListaUsuarios/pagina/:page",
+            "params": {
+                "controller": "lista-usuarios",
+                "action": "index",
+                "page": ":page"
+            }
+        }
+    ]
+}

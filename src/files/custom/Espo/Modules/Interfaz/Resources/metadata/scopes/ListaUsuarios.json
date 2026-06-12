@@ -1,0 +1,16 @@
+{
+    "entity": false,
+    "layouts": false,
+    "tab": false,
+    "acl": "record",
+    "aclClassName": "Espo\\Modules\\Interfaz\\Classes\\Acl\\ListaUsuarios",
+    "customizable": true,
+    "importable": false,
+    "notifications": false,
+    "stream": false,
+    "disabled": false,
+    "type": "Base",
+    "module": "Interfaz",
+    "object": true,
+    "isCustom": true
+}

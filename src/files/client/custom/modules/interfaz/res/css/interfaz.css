@@ -1,0 +1,108 @@
+/* client/custom/modules/interfaz/res/css/interfaz.css */
+:root {
+    --int-primary: #B8A279;
+    --int-primary-dark: #9D8B5F;
+    --int-primary-light: #D4C19C;
+    --int-success: #27ae60;
+    --int-warning: #f39c12;
+    --int-danger: #e74c3c;
+    --int-dark: #1A1A1A;
+    --int-light: #F5F5F5;
+    --int-border: #E6E6E6;
+    --int-white: #FFFFFF;
+    --int-text: #363438;
+    --int-text-muted: #666666;
+}
+
+/* Loading */
+.int-loading {
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.int-spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid var(--int-border);
+    border-top-color: var(--int-primary);
+    border-radius: 50%;
+    animation: int-spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes int-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Botones */
+.int-btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.int-btn-primary {
+    background: var(--int-primary);
+    color: white;
+}
+.int-btn-primary:hover {
+    background: var(--int-primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(184,162,121,0.3);
+}
+
+.int-btn-secondary {
+    background: var(--int-white);
+    color: var(--int-text-muted);
+    border: 2px solid var(--int-border);
+}
+.int-btn-secondary:hover {
+    background: var(--int-primary);
+    color: white;
+    border-color: var(--int-primary);
+}
+
+/* Alerts */
+.int-alert {
+    padding: 14px 18px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.int-alert-info    { background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+.int-alert-danger  { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+.int-alert-success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+
+/* No data */
+.int-no-data {
+    background: var(--int-white);
+    border-radius: 12px;
+    padding: 60px 40px;
+    text-align: center;
+    border: 1px solid var(--int-border);
+}
+.int-no-data i {
+    font-size: 64px;
+    color: var(--int-primary);
+    margin-bottom: 20px;
+    display: block;
+}
+.int-no-data h3 {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--int-dark);
+    margin-bottom: 10px;
+}
+.int-no-data p {
+    color: var(--int-text-muted);
+    font-size: 16px;
+}

@@ -1,9 +1,9 @@
 {
-    "module": "{@name}",
-    "name": "{@nameLabel}",
-    "description": "{@description}",
-    "author": "{@author}",
-    "bundled": {@bundled},
+    "module": "Interfaz",
+    "name": "Interfaz",
+    "description": "Interfaces para sistema de embajadores de C21.",
+    "author": "Sebastian Silva",
+    "bundled": true,
     "acceptableVersions": [
         ">=9.1.0"
     ],

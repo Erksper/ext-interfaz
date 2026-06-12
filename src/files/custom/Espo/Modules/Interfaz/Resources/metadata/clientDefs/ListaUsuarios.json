@@ -1,0 +1,4 @@
+{
+    "controller": "interfaz:controllers/lista-usuarios",
+    "checkForDuplicatesInQuickCreate": false
+}

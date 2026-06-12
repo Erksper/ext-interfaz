@@ -1,0 +1,11 @@
+{
+    "name": "interfaz",
+    "version": "1.0.0",
+    "description": "Módulo de gestión de usuarios",
+    "main": "lib/init.js",
+    "scripts": {
+        "build": "echo 'Build completed'"
+    },
+    "dependencies": {},
+    "devDependencies": {}
+}
