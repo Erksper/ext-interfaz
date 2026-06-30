@@ -21,6 +21,60 @@
                 "action": "index",
                 "page": ":page"
             }
+        },
+        {
+            "route": "ListaUsuarios/view/:id",
+            "params": {
+                "controller": "lista-usuarios",
+                "action": "view",
+                "id": ":id"
+            }
+        },
+        {
+            "route": "ListaEmbajadores",
+            "params": {
+                "controller": "lista-embajadores",
+                "action": "index"
+            }
+        },
+        {
+            "route": "ListaEmbajadores/pagina/:page",
+            "params": {
+                "controller": "lista-embajadores",
+                "action": "index",
+                "page": ":page"
+            }
+        },
+        {
+            "route": "ListaEmbajadores/view/:id",
+            "params": {
+                "controller": "lista-embajadores",
+                "action": "view",
+                "id": ":id"
+            }
+        },
+        {
+            "route": "ListaLeads",
+            "params": {
+                "controller": "lista-leads",
+                "action": "index"
+            }
+        },
+        {
+            "route": "ListaLeads/pagina/:page",
+            "params": {
+                "controller": "lista-leads",
+                "action": "index",
+                "page": ":page"
+            }
+        },
+        {
+            "route": "ListaLeads/view/:id",
+            "params": {
+                "controller": "lista-leads",
+                "action": "view",
+                "id": ":id"
+            }
         }
     ]
 }

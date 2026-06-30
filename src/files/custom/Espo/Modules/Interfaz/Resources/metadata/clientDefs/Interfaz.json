@@ -1,16 +1,5 @@
 {
     "controller": "controllers/record",
     "iconClass": "fas fa-users",
-    "color": "#B8A279",
-    "menu": {
-        "list": [
-            {
-                "label": "Lista de Usuarios",
-                "link": "#ListaUsuarios",
-                "acl": "read",
-                "aclScope": "Interfaz",
-                "iconClass": "fas fa-list"
-            }
-        ]
-    }
+    "color": "#B8A279"
 }

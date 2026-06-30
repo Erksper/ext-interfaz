@@ -1,4 +1,4 @@
-define("interfaz:controllers/lista-usuarios", [
+define("interfaz:controllers/lista-leads", [
     "controllers/base",
 ], function (Base) {
     return Base.extend({
@@ -10,21 +10,21 @@ define("interfaz:controllers/lista-usuarios", [
 
         actionIndex: function (options) {
             const page = options && options.page ? parseInt(options.page) : 1;
-            this.main("interfaz:views/lista-usuarios", {
+            this.main("interfaz:views/lista-leads", {
                 paginaInicial: page,
-                scope: "User"
+                scope: "Opportunity"
             });
         },
 
         actionView: function (options) {
-            const userId = options && options.id ? options.id : null;
-            if (!userId) {
-                this.getRouter().navigate("#ListaUsuarios", { trigger: true });
+            const id = options && options.id ? options.id : null;
+            if (!id) {
+                this.getRouter().navigate("#ListaLeads", { trigger: true });
                 return;
             }
-            this.main("interfaz:views/perfil-usuario", {
-                userId: userId,
-                scope: "User"
+            this.main("interfaz:views/detalle-lead", {
+                leadId: id,
+                scope: "Opportunity"
             });
         }
     });

@@ -106,3 +106,49 @@
     color: var(--int-text-muted);
     font-size: 16px;
 }
+
+.int-page-header {
+    background: var(--int-white);
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    border: 1px solid var(--int-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.int-header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex: 1;
+}
+
+.int-header-icon {
+    width: 56px;
+    height: 56px;
+    background: var(--int-primary);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 26px;
+}
+
+.int-page-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--int-dark);
+    margin: 0 0 4px 0;
+}
+
+.int-page-subtitle {
+    color: var(--int-text-muted);
+    font-size: 15px;
+    margin: 0;
+}

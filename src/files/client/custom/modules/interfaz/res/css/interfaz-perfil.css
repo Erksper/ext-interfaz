@@ -1,0 +1,522 @@
+/* =============================================
+   PERFIL DE USUARIO - interfaz-perfil.css
+   ============================================= */
+
+/* Layout principal */
+.int-perfil-top {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+/* Header */
+.int-header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+}
+
+/* Avatar card */
+.int-avatar-card {
+    background: var(--int-white);
+    border-radius: 12px;
+    padding: 24px 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    border: 1px solid var(--int-border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    align-self: start;
+}
+
+.int-avatar-wrap {
+    position: relative;
+    width: 140px;
+    height: 140px;
+}
+
+.int-avatar-img {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--int-primary);
+    display: block;
+}
+
+.int-avatar-placeholder {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: var(--int-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 48px;
+    font-weight: 700;
+    border: 3px solid var(--int-primary-dark);
+}
+
+.int-avatar-edit-btn {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--int-primary);
+    color: white;
+    border: 2px solid white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    transition: background 0.2s;
+}
+.int-avatar-edit-btn:hover { background: var(--int-primary-dark); }
+
+.int-avatar-username {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--int-dark);
+    text-align: center;
+    word-break: break-all;
+}
+
+.int-avatar-badges {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+    align-items: center;
+}
+
+/* Info cards */
+.int-info-card {
+    background: var(--int-white);
+    border-radius: 12px;
+    padding: 24px 28px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    border: 1px solid var(--int-border);
+    margin-bottom: 24px;
+}
+
+.int-info-card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--int-dark);
+    margin: 0 0 20px 0;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--int-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.int-info-card-title i { color: var(--int-primary); }
+
+/* Grid de campos */
+.int-fields-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px 24px;
+}
+
+/* Campo editable */
+.int-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.int-field-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--int-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.int-field-value-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 34px;
+}
+
+.int-field-value {
+    font-size: 14px;
+    color: var(--int-dark);
+    font-weight: 500;
+    flex: 1;
+    word-break: break-word;
+}
+
+.int-field-value.empty {
+    color: var(--int-text-muted);
+    font-style: italic;
+    font-weight: 400;
+}
+
+.int-field-edit-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background: transparent;
+    border: 1px solid var(--int-border);
+    color: var(--int-text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    opacity: 0;
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
+.int-field:hover .int-field-edit-btn { opacity: 1; }
+.int-field-edit-btn:hover {
+    background: var(--int-primary);
+    color: white;
+    border-color: var(--int-primary);
+}
+
+/* Edición inline */
+.int-field-edit-mode {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+}
+.int-field-edit-mode.active { display: flex; }
+.int-field-view-mode.hidden { display: none; }
+
+.int-field-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid var(--int-primary);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--int-dark);
+    outline: none;
+    background: var(--int-white);
+    box-sizing: border-box;
+    font-family: inherit;
+    resize: vertical;
+}
+
+.int-field-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.int-field-save-btn {
+    padding: 6px 16px;
+    background: var(--int-primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.int-field-save-btn:hover:not(:disabled) { background: var(--int-primary-dark); }
+.int-field-save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.int-field-cancel-btn {
+    padding: 6px 16px;
+    background: var(--int-white);
+    color: var(--int-text-muted);
+    border: 1px solid var(--int-border);
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.int-field-cancel-btn:hover { background: var(--int-light); }
+
+/* Link */
+.int-field-link {
+    color: var(--int-primary);
+    text-decoration: none;
+    font-size: 13px;
+    word-break: break-all;
+    line-height: 1.4;
+}
+.int-field-link:hover { text-decoration: underline; }
+
+/* QR */
+.int-qr-container {
+    margin-top: 4px;
+    cursor: pointer;
+}
+.int-qr-container canvas,
+.int-qr-container img {
+    border: 1px solid var(--int-border);
+    border-radius: 8px;
+    transition: transform 0.2s;
+}
+.int-qr-container canvas:hover,
+.int-qr-container img:hover { transform: scale(1.05); }
+
+/* Tags */
+.int-tags-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding-top: 2px;
+}
+
+.int-tag {
+    background: rgba(184,162,121,0.12);
+    color: var(--int-primary-dark);
+    border: 1px solid rgba(184,162,121,0.35);
+    border-radius: 20px;
+    padding: 3px 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Notas */
+.int-nueva-nota {
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--int-border);
+}
+
+.int-notas-empty {
+    color: var(--int-text-muted);
+    font-style: italic;
+    font-size: 14px;
+}
+
+.int-nota-item {
+    background: var(--int-light);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    border-left: 3px solid var(--int-primary);
+}
+
+.int-nota-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.int-nota-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--int-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.int-nota-autor {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--int-dark);
+}
+
+.int-nota-fecha {
+    font-size: 12px;
+    color: var(--int-text-muted);
+    margin-left: auto;
+}
+
+.int-nota-texto {
+    font-size: 14px;
+    color: var(--int-text);
+    line-height: 1.5;
+    white-space: pre-wrap;
+}
+
+/* Input file oculto */
+#int-avatar-file-input { display: none; }
+
+/* Responsive */
+@media (max-width: 900px) {
+    .int-perfil-top {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .int-info-card { padding: 16px; }
+    .int-fields-grid { grid-template-columns: 1fr; }
+    .int-nota-fecha { display: none; }
+}
+
+/* Documentos */
+.int-docs-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.int-doc-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: var(--int-light);
+    border: 1px solid var(--int-border);
+    border-radius: 8px;
+    color: var(--int-primary-dark);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+    max-width: fit-content;
+}
+.int-doc-item:hover {
+    background: rgba(184,162,121,0.12);
+    border-color: var(--int-primary);
+    color: var(--int-primary-dark);
+    text-decoration: none;
+    transform: translateX(3px);
+}
+.int-doc-item i {
+    color: var(--int-primary);
+    font-size: 14px;
+}
+
+/* Documentos con botón de eliminar — agregar al final de interfaz-perfil.css */
+.int-docs-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.int-doc-item-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: fit-content;
+}
+
+.int-doc-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: var(--int-light);
+    border: 1px solid var(--int-border);
+    border-radius: 8px;
+    color: var(--int-primary-dark);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+.int-doc-item:hover {
+    background: rgba(184,162,121,0.12);
+    border-color: var(--int-primary);
+    color: var(--int-primary-dark);
+    text-decoration: none;
+}
+.int-doc-item i {
+    color: var(--int-primary);
+    font-size: 14px;
+}
+
+.int-doc-remove-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    background: transparent;
+    border: 1px solid var(--int-border);
+    color: var(--int-text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
+.int-doc-remove-btn:hover {
+    background: var(--int-danger);
+    color: white;
+    border-color: var(--int-danger);
+}
+
+#int-doc-file-input { display: none; }
+
+/* Documentos con botón de eliminar — agregar al final de interfaz-perfil.css */
+.int-docs-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.int-doc-item-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: fit-content;
+}
+
+.int-doc-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: var(--int-light);
+    border: 1px solid var(--int-border);
+    border-radius: 8px;
+    color: var(--int-primary-dark);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+.int-doc-item:hover {
+    background: rgba(184,162,121,0.12);
+    border-color: var(--int-primary);
+    color: var(--int-primary-dark);
+    text-decoration: none;
+}
+.int-doc-item i {
+    color: var(--int-primary);
+    font-size: 14px;
+}
+
+.int-doc-remove-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    background: transparent;
+    border: 1px solid var(--int-border);
+    color: var(--int-text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
+.int-doc-remove-btn:hover {
+    background: var(--int-danger);
+    color: white;
+    border-color: var(--int-danger);
+}
+
+#int-doc-file-input { display: none; }

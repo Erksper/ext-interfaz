@@ -1,4 +1,17 @@
 {
     "controller": "interfaz:controllers/lista-usuarios",
-    "checkForDuplicatesInQuickCreate": false
+    "iconClass": "fas fa-users",
+    "color": "#B8A279",
+    "checkForDuplicatesInQuickCreate": false,
+    "menu": {
+        "list": [
+            {
+                "label": "Lista de Usuarios",
+                "link": "#ListaUsuarios",
+                "acl": "read",
+                "aclScope": "ListaUsuarios",
+                "iconClass": "fas fa-list"
+            }
+        ]
+    }
 }

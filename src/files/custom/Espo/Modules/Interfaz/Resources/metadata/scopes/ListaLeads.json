@@ -1,9 +1,9 @@
 {
     "entity": true,
     "layouts": false,
-    "tab": false,
+    "tab": true,
     "acl": true,
-    "customizable": true,
+    "customizable": false,
     "importable": false,
     "notifications": false,
     "stream": false,

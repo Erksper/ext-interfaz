@@ -332,7 +332,7 @@ define("interfaz:views/lista-usuarios", ["view"], function (Dep) {
             container.find('.int-usuario-card').on('click', function () {
                 const userId = $(this).data('id');
                 if (userId) {
-                    window.open('#User/view/' + userId, '_blank');
+                    self.getRouter().navigate('#ListaUsuarios/view/' + userId, { trigger: true });
                 }
             });
             

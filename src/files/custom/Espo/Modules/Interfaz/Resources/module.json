@@ -1,5 +1,11 @@
 {
     "order": 50,
-    "bundled": true,
-    "jsTranspiled": true
+    "bundled": false,
+    "jsTranspiled": false,
+    "libs": [
+        {
+            "src": "client/custom/modules/interfaz/res/lib/qrcode.min.js",
+            "dev": false
+        }
+    ]
 }

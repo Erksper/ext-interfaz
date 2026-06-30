@@ -1,0 +1,17 @@
+{
+    "controller": "interfaz:controllers/lista-leads",
+    "iconClass": "fas fa-bullseye",
+    "color": "#B8A279",
+    "checkForDuplicatesInQuickCreate": false,
+    "menu": {
+        "list": [
+            {
+                "label": "Lista de Leads",
+                "link": "#ListaLeads",
+                "acl": "read",
+                "aclScope": "ListaLeads",
+                "iconClass": "fas fa-bullseye"
+            }
+        ]
+    }
+}

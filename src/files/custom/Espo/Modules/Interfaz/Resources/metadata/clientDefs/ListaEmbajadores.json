@@ -1,0 +1,17 @@
+{
+    "controller": "interfaz:controllers/lista-embajadores",
+    "iconClass": "fas fa-address-card",
+    "color": "#B8A279",
+    "checkForDuplicatesInQuickCreate": false,
+    "menu": {
+        "list": [
+            {
+                "label": "Lista de Embajadores",
+                "link": "#ListaEmbajadores",
+                "acl": "read",
+                "aclScope": "ListaEmbajadores",
+                "iconClass": "fas fa-address-card"
+            }
+        ]
+    }
+}

@@ -1,7 +1,7 @@
 {
-    "entity": false,
+    "entity": true,
     "layouts": false,
-    "tab": false,
+    "tab": true,
     "acl": "record",
     "aclClassName": "Espo\\Modules\\Interfaz\\Classes\\Acl\\ListaUsuarios",
     "customizable": true,
