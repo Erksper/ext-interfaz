@@ -151,4 +151,6 @@
     color: var(--int-text-muted);
     font-size: 15px;
     margin: 0;
+    word-break: normal;
+    overflow-wrap: break-word;
 }

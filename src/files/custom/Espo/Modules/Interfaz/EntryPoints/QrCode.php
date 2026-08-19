@@ -47,13 +47,52 @@ class QrCode implements EntryPoint
             return;
         }
 
-        $options = new QROptions([
-            'version'     => 5,
-            'outputType'  => \chillerlan\QRCode\Output\QROutputInterface::GDIMAGE_PNG,
-            'eccLevel'    => QRCodeGenerator::ECC_M,
-            'scale'       => 6,
-            'imageBase64' => false,
-        ]);
+        // IMPORTANTE: chillerlan/php-qrcode cambio su API entre versiones mayores,
+        // y detectamos DOS versiones distintas instaladas entre el ambiente local
+        // y el desplegado (probablemente porque composer.json no fija la version):
+        //
+        //   - Versiones viejas (v3/v4): QROptions::outputType con la constante
+        //     QROutputInterface::GDIMAGE_PNG, QROptions::imageBase64,
+        //     eccLevel como entero (QRCode::ECC_M).
+        //   - Versiones nuevas (v5/v6-dev): QROptions::outputInterface con el
+        //     FQCN de la clase de salida (QRGdImagePNG::class),
+        //     QROptions::outputBase64, eccLevel via la clase EccLevel::M.
+        //
+        // En vez de asumir una sola, se arma el array de opciones detectando en
+        // tiempo de ejecucion que existe. Las claves que no aplican a la version
+        // instalada simplemente se ignoran (QROptions no truena por claves
+        // desconocidas), asi que es seguro mandar ambas.
+        $opciones = [
+            'version'      => 5,
+            'scale'        => 6,
+            // Claves de salida en base64: mandamos ambos nombres posibles.
+            // Si queda en true (default de la libreria) el render() devuelve
+            // un data-URI de texto en vez de bytes PNG, y el navegador muestra
+            // "la imagen contiene errores" porque no es un PNG valido.
+            'imageBase64'  => false,
+            'outputBase64' => false,
+        ];
+
+        if (class_exists('chillerlan\QRCode\Common\EccLevel')) {
+            // v5+
+            $opciones['eccLevel'] = \chillerlan\QRCode\Common\EccLevel::M;
+        } else {
+            // v3/v4
+            $opciones['eccLevel'] = QRCodeGenerator::ECC_M;
+        }
+
+        if (class_exists('chillerlan\QRCode\Output\QRGdImagePNG')) {
+            // v5+: FQCN de la clase de salida
+            $opciones['outputInterface'] = 'chillerlan\QRCode\Output\QRGdImagePNG';
+        } elseif (
+            class_exists('chillerlan\QRCode\Output\QROutputInterface') &&
+            defined('chillerlan\QRCode\Output\QROutputInterface::GDIMAGE_PNG')
+        ) {
+            // v3/v4: constante clasica
+            $opciones['outputType'] = \chillerlan\QRCode\Output\QROutputInterface::GDIMAGE_PNG;
+        }
+
+        $options = new QROptions($opciones);
 
         $qr = new QRCodeGenerator($options);
         $imageData = $qr->render($texto);

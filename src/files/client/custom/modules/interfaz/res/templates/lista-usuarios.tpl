@@ -19,6 +19,11 @@
 
     <!-- Filtros -->
     <div class="int-filtro-card">
+        <div class="int-filtro-busqueda">
+            <i class="fas fa-search"></i>
+            <input type="text" id="filtro-nombre" class="int-form-control"
+                   placeholder="Buscar por nombre o usuario...">
+        </div>
         <div class="int-filtros-grid">
             <div class="int-filtro-group">
                 <label>CLA</label>
@@ -48,7 +53,6 @@
                 <label>Tipo de Usuario</label>
                 <select id="filtro-tipo" class="int-form-control">
                     <option value="">Todos</option>
-                    <option value="admin">Administrador</option>
                     <option value="regular">Regular</option>
                     <option value="portal">Portal</option>
                 </select>

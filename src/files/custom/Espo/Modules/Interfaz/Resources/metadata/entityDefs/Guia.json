@@ -1,0 +1,55 @@
+{
+    "fields": {
+        "nombre": {
+            "type": "varchar",
+            "len": 255,
+            "required": true
+        },
+        "descripcion": {
+            "type": "text"
+        },
+        "archivo": {
+            "type": "file"
+        },
+        "orden": {
+            "type": "int",
+            "default": 0
+        },
+        "createdAt": {
+            "type": "datetime",
+            "readOnly": true
+        },
+        "modifiedAt": {
+            "type": "datetime",
+            "readOnly": true
+        },
+        "createdBy": {
+            "type": "link",
+            "readOnly": true,
+            "view": "views/fields/user"
+        },
+        "modifiedBy": {
+            "type": "link",
+            "readOnly": true,
+            "view": "views/fields/user"
+        }
+    },
+    "links": {
+        "archivo": {
+            "type": "belongsTo",
+            "entity": "Attachment"
+        },
+        "createdBy": {
+            "type": "belongsTo",
+            "entity": "User"
+        },
+        "modifiedBy": {
+            "type": "belongsTo",
+            "entity": "User"
+        }
+    },
+    "collection": {
+        "orderBy": "orden",
+        "order": "asc"
+    }
+}

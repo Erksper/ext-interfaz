@@ -55,9 +55,11 @@ class Leads extends \Espo\Core\Controllers\Record
             $asesorId  = $request->get('asesorId');
             $interes   = $request->get('interes');
             $stage     = $request->get('stage');
+            $fechaDesde = $request->get('fechaDesde');
+            $fechaHasta = $request->get('fechaHasta');
 
             list($sql, $params) = $this->buildBaseQuery(
-                $user, $userInfo, $pdo, $claId, $oficinaId, $asesorId, $interes, $stage
+                $user, $userInfo, $pdo, $claId, $oficinaId, $asesorId, $interes, $stage, $fechaDesde, $fechaHasta
             );
 
             $sql .= " ORDER BY o.created_at DESC";
@@ -115,6 +117,8 @@ class Leads extends \Espo\Core\Controllers\Record
             $asesorId  = $request->get('asesorId');
             $interes   = $request->get('interes');
             $stage     = $request->get('stage');
+            $fechaDesde = $request->get('fechaDesde');
+            $fechaHasta = $request->get('fechaHasta');
 
             $porColumna = (int)$request->get('porColumna', 25);
             $paginas    = $request->get('paginas'); // JSON: {"Prospecting": 1, "Proposed": 2, ...}
@@ -136,7 +140,7 @@ class Leads extends \Espo\Core\Controllers\Record
                 $offsetCol = ($paginaCol - 1) * $porColumna;
 
                 list($sql, $sqlParams) = $this->buildBaseQuery(
-                    $user, $userInfo, $pdo, $claId, $oficinaId, $asesorId, $interes, $stageValue
+                    $user, $userInfo, $pdo, $claId, $oficinaId, $asesorId, $interes, $stageValue, $fechaDesde, $fechaHasta
                 );
 
                 $sqlCount = "SELECT COUNT(*) as total FROM (" . $sql . ") as sub";
@@ -181,7 +185,7 @@ class Leads extends \Espo\Core\Controllers\Record
         }
     }
 
-    private function buildBaseQuery($user, $userInfo, $pdo, $claId, $oficinaId, $asesorId, $interes, $stage)
+    private function buildBaseQuery($user, $userInfo, $pdo, $claId, $oficinaId, $asesorId, $interes, $stage, $fechaDesde = null, $fechaHasta = null)
     {
         $sql = "SELECT DISTINCT
                     o.id,
@@ -249,6 +253,16 @@ class Leads extends \Espo\Core\Controllers\Record
             $params[':stage'] = $stage;
         }
 
+        if ($fechaDesde) {
+            $sql .= " AND o.created_at >= :fechaDesde";
+            $params[':fechaDesde'] = $fechaDesde . ' 00:00:00';
+        }
+
+        if ($fechaHasta) {
+            $sql .= " AND o.created_at <= :fechaHasta";
+            $params[':fechaHasta'] = $fechaHasta . ' 23:59:59';
+        }
+
         return [$sql, $params];
     }
 
@@ -290,7 +304,6 @@ class Leads extends \Espo\Core\Controllers\Record
                         o.c_interes,
                         o.c_nmero_de_contacto,
                         o.c_correo,
-                        o.c_codigo,
                         o.amount,
                         o.amount_currency,
                         o.probability,
@@ -368,7 +381,6 @@ class Leads extends \Espo\Core\Controllers\Record
                     'cInteres'            => $row['c_interes'],
                     'numeroContacto'      => $row['c_nmero_de_contacto'],
                     'correo'              => $row['c_correo'],
-                    'codigo'              => $row['c_codigo'],
                     'amount'              => $row['amount'],
                     'amountCurrency'      => $row['amount_currency'],
                     'probability'         => $row['probability'],

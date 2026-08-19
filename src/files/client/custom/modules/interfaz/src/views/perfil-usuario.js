@@ -5,6 +5,7 @@ define("interfaz:views/perfil-usuario", ["view"], function (Dep) {
         setup: function () {
             this.userId = this.options.userId;
             this.userData = null;
+            this.permisos = { puedeEditarCompartidos: false, puedeEditarTodo: false };
         },
 
         afterRender: function () {
@@ -17,6 +18,7 @@ define("interfaz:views/perfil-usuario", ["view"], function (Dep) {
                 .then(function (response) {
                     if (response.success) {
                         self.userData = response.data;
+                        self.permisos = response.data.permisos || { puedeEditarCompartidos: false, puedeEditarTodo: false };
                         self.renderPerfil(response.data);
                     } else {
                         self.mostrarError(response.error);
@@ -60,9 +62,18 @@ define("interfaz:views/perfil-usuario", ["view"], function (Dep) {
                    <input type="file" id="int-avatar-file-input" accept="image/*">`
                 : '';
 
-            const estadoBadge = d.isActive == 1
-                ? '<span class="int-badge int-badge-activo">Activo</span>'
-                : '<span class="int-badge int-badge-inactivo">Inactivo</span>';
+            const puedeTodo = !!this.permisos.puedeEditarTodo;
+            const puedeCompartido = !!this.permisos.puedeEditarCompartidos;
+
+            const estadoBadge = puedeTodo
+                ? `<button type="button" class="int-badge int-badge-toggle ${d.isActive == 1 ? 'int-badge-activo' : 'int-badge-inactivo'}"
+                       id="int-btn-toggle-activo" data-activo="${d.isActive == 1 ? '1' : '0'}"
+                       title="Clic para ${d.isActive == 1 ? 'desactivar' : 'activar'}">
+                       ${d.isActive == 1 ? 'Activo' : 'Inactivo'}
+                   </button>`
+                : (d.isActive == 1
+                    ? '<span class="int-badge int-badge-activo">Activo</span>'
+                    : '<span class="int-badge int-badge-inactivo">Inactivo</span>');
 
             const tipoBadge = `<span class="int-badge int-badge-rol">${this.escapeHtml(d.type || '')}</span>`;
 
@@ -77,6 +88,12 @@ define("interfaz:views/perfil-usuario", ["view"], function (Dep) {
             const rolesHtml = d.roles && d.roles.length
                 ? d.roles.map(r => `<span class="int-tag">${this.escapeHtml(r.name)}</span>`).join('')
                 : '<span class="int-field-value empty">Sin roles</span>';
+
+            const rolesEditBtn = puedeTodo
+                ? `<button class="int-field-edit-btn int-roles-edit-btn" id="int-btn-editar-roles" title="Editar roles">
+                       <i class="fas fa-pencil-alt"></i>
+                   </button>`
+                : '';
 
             const notasHtml = this.renderNotas(d.notas || []);
 
@@ -128,23 +145,25 @@ define("interfaz:views/perfil-usuario", ["view"], function (Dep) {
                         <i class="fas fa-id-card"></i> Datos Personales
                     </h3>
                     <div class="int-fields-grid">
-                        ${this.renderField('Nombre', 'first_name', d.firstName, true)}
-                        ${this.renderField('Apellido', 'last_name', d.lastName, true)}
-                        ${this.renderField('Título', 'title', d.title, true)}
+                        ${this.renderField('Nombre', 'first_name', d.firstName, puedeTodo)}
+                        ${this.renderField('Apellido', 'last_name', d.lastName, puedeTodo)}
+                        ${this.renderField('Título', 'title', d.title, puedeTodo)}
                         ${this.renderField('Género', 'gender',
                             d.gender === 'Male' ? 'Masculino' : d.gender === 'Female' ? 'Femenino' : d.gender,
-                            true, 'select',
+                            puedeTodo, 'select',
                             [{val:'Male',label:'Masculino'},{val:'Female',label:'Femenino'}],
                             d.gender)}
-                        ${this.renderField('Correo electrónico', 'email', d.emailAddress, true, 'email')}
-                        ${this.renderField('Teléfono', 'phone', d.phoneNumber, true)}
-                        ${this.renderField('Tipo de carnet', 'c_tipode_carnet', d.tipoCarnet, true, 'select',
+                        ${this.renderField('Correo electrónico', 'email', d.emailAddress, puedeCompartido, 'email')}
+                        ${this.renderField('Teléfono', 'phone', d.phoneNumber, puedeCompartido)}
+                        ${this.renderField('Instagram', 'c_instagram', d.instagram, puedeCompartido, 'url')}
+                        ${this.renderField('Tipo de carnet', 'c_tipode_carnet', d.tipoCarnet, puedeTodo, 'select',
                             [{val:'1',label:'Asesor'},{val:'2',label:'Asesor Certificado'}],
                             d.tipoCarnetVal)}
-                        ${this.renderFieldReadonly('URL de perfil', d.urlPerfil, 'link')}
+                        ${this.renderFieldBool('Mostrar información en perfil público', 'c_info', d.info, puedeCompartido)}
                         ${this.renderFieldReadonly('Carnet', d.carnet, 'link')}
+                        ${this.renderFieldReadonly('URL de perfil', d.urlPerfil, 'link')}
                     </div>
-                    ${this.renderFieldText('Descripción de perfil', 'c_descripcionperfil', d.descripcionPerfil, true)}
+                    ${this.renderFieldText('Descripción de perfil', 'c_descripcionperfil', d.descripcionPerfil, puedeCompartido)}
                     <div class="int-field" style="margin-top:16px;">
                         <span class="int-field-label">Código QR</span>
                         <div class="int-qr-container">
@@ -170,7 +189,10 @@ define("interfaz:views/perfil-usuario", ["view"], function (Dep) {
                     </div>
                     <div class="int-field">
                         <span class="int-field-label">Roles</span>
-                        <div class="int-tags-wrap">${rolesHtml}</div>
+                        <div class="int-tags-wrap">
+                            ${rolesHtml}
+                            ${rolesEditBtn}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -258,6 +280,10 @@ define("interfaz:views/perfil-usuario", ["view"], function (Dep) {
             } else if (tipo === 'email') {
                 inputHtml = `<input type="email" class="int-field-input" data-campo="${campo}"
                     value="${this.escapeHtml(valor || '')}">`;
+            } else if (tipo === 'url') {
+                inputHtml = `<input type="url" class="int-field-input" data-campo="${campo}"
+                    placeholder="https://instagram.com/usuario"
+                    value="${this.escapeHtml(valor || '')}">`;
             } else {
                 inputHtml = `<input type="text" class="int-field-input" data-campo="${campo}"
                     value="${this.escapeHtml(String(valor || ''))}">`;
@@ -301,6 +327,43 @@ define("interfaz:views/perfil-usuario", ["view"], function (Dep) {
                 ${editable ? `
                 <div class="int-field-edit-mode">
                     <textarea class="int-field-input" data-campo="${campo}" rows="3">${this.escapeHtml(valor || '')}</textarea>
+                    <div class="int-field-actions">
+                        <button class="int-field-save-btn" data-campo="${campo}">Guardar</button>
+                        <button class="int-field-cancel-btn" data-campo="${campo}">Cancelar</button>
+                    </div>
+                </div>` : ''}
+            </div>`;
+        },
+
+        renderFieldBool: function (label, campo, valor, editable) {
+            const activo = !!valor;
+
+            const displayVal = `<span class="int-field-value">${activo ? 'Sí' : 'No'}</span>`;
+
+            const editBtn = editable
+                ? `<button class="int-field-edit-btn" data-campo="${campo}" title="Editar">
+                       <i class="fas fa-pencil-alt"></i>
+                   </button>`
+                : '';
+
+            const inputHtml = `
+                <label class="int-switch">
+                    <input type="checkbox" class="int-field-input int-field-checkbox" data-campo="${campo}" ${activo ? 'checked' : ''}>
+                    <span class="int-switch-slider"></span>
+                </label>`;
+
+            return `
+            <div class="int-field" data-campo="${campo}" data-bool="1">
+                <span class="int-field-label">${label}</span>
+                <div class="int-field-view-mode">
+                    <div class="int-field-value-wrap">
+                        ${displayVal}
+                        ${editBtn}
+                    </div>
+                </div>
+                ${editable ? `
+                <div class="int-field-edit-mode">
+                    ${inputHtml}
                     <div class="int-field-actions">
                         <button class="int-field-save-btn" data-campo="${campo}">Guardar</button>
                         <button class="int-field-cancel-btn" data-campo="${campo}">Cancelar</button>
@@ -359,8 +422,23 @@ define("interfaz:views/perfil-usuario", ["view"], function (Dep) {
             container.on('click', '.int-field-save-btn[data-campo]', function () {
                 const campo = $(this).data('campo');
                 const fieldEl = container.find(`.int-field[data-campo="${campo}"]`);
-                const valor = fieldEl.find('.int-field-input').val();
+
+                const valor = fieldEl.data('bool')
+                    ? fieldEl.find('.int-field-checkbox').is(':checked')
+                    : fieldEl.find('.int-field-input').val();
+
                 self.guardarCampo(campo, valor, fieldEl);
+            });
+
+            // Activar/desactivar usuario (solo Casa Nacional/Admin, botón ya viene
+            // condicionado desde renderPerfil)
+            container.on('click', '#int-btn-toggle-activo', function () {
+                self.toggleActivo($(this));
+            });
+
+            // Editar roles (solo Casa Nacional/Admin)
+            container.on('click', '#int-btn-editar-roles', function () {
+                self.abrirModalRoles();
             });
 
             // Crear nota
@@ -397,6 +475,9 @@ define("interfaz:views/perfil-usuario", ["view"], function (Dep) {
                         }
                         if (campo === 'gender') {
                             displayVal = valor === 'Male' ? 'Masculino' : 'Femenino';
+                        }
+                        if (campo === 'c_info') {
+                            displayVal = valor ? 'Sí' : 'No';
                         }
 
                         fieldEl.find('.int-field-view-mode .int-field-value')
@@ -446,6 +527,82 @@ define("interfaz:views/perfil-usuario", ["view"], function (Dep) {
 
         subirAvatar: function (file) {
             Espo.Ui.info('Función de subida de foto en desarrollo');
+        },
+
+        toggleActivo: function ($btn) {
+            const self = this;
+            const activoActual = $btn.data('activo') == '1' || $btn.data('activo') === 1;
+            const nuevoValor = !activoActual;
+            const accion = nuevoValor ? 'activar' : 'desactivar';
+
+            const confirmar = function () {
+                $btn.prop('disabled', true);
+
+                Espo.Ajax.postRequest('Usuarios/action/actualizarActivo', {
+                    userId: self.userId,
+                    activo: nuevoValor
+                })
+                .then(function (response) {
+                    if (response.success) {
+                        $btn
+                            .data('activo', nuevoValor ? '1' : '0')
+                            .attr('data-activo', nuevoValor ? '1' : '0')
+                            .attr('title', 'Clic para ' + (nuevoValor ? 'desactivar' : 'activar'))
+                            .text(nuevoValor ? 'Activo' : 'Inactivo')
+                            .toggleClass('int-badge-activo', nuevoValor)
+                            .toggleClass('int-badge-inactivo', !nuevoValor);
+
+                        Espo.Ui.success('Usuario ' + (nuevoValor ? 'activado' : 'desactivado'));
+                    } else {
+                        Espo.Ui.error(response.error || 'No se pudo actualizar el estado');
+                    }
+                })
+                .catch(function () {
+                    Espo.Ui.error('Error de conexión al actualizar el estado');
+                })
+                .finally(function () {
+                    $btn.prop('disabled', false);
+                });
+            };
+
+            if (typeof Espo !== 'undefined' && Espo.Ui && Espo.Ui.confirm) {
+                Espo.Ui.confirm(
+                    '¿Seguro que deseas ' + accion + ' a este usuario?',
+                    { confirmText: 'Sí, ' + accion, cancelText: 'Cancelar' },
+                    confirmar
+                );
+                return;
+            }
+
+            if (window.confirm('¿Seguro que deseas ' + accion + ' a este usuario?')) {
+                confirmar();
+            }
+        },
+
+        abrirModalRoles: function () {
+            const self = this;
+
+            this.createView('modalEditarRoles', 'interfaz:views/modals/editar-roles', {
+                userId: this.userId,
+                rolesActuales: (this.userData && this.userData.roles) || []
+            }, function (view) {
+                view.render();
+
+                self.listenToOnce(view, 'actualizado', function (nuevosRoles) {
+                    view.close();
+                    self.userData.roles = nuevosRoles;
+
+                    const rolesHtml = nuevosRoles && nuevosRoles.length
+                        ? nuevosRoles.map(r => `<span class="int-tag">${self.escapeHtml(r.name)}</span>`).join('')
+                        : '<span class="int-field-value empty">Sin roles</span>';
+
+                    self.$el.find('.int-tags-wrap').has('#int-btn-editar-roles')
+                        .find('.int-tag, .int-field-value.empty').remove();
+                    self.$el.find('#int-btn-editar-roles').before(rolesHtml);
+
+                    Espo.Ui.success('Roles actualizados');
+                });
+            });
         },
 
         mostrarError: function (msg) {

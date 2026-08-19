@@ -22,6 +22,11 @@
 
     <!-- Filtros -->
     <div class="int-filtro-card">
+        <div class="int-filtro-busqueda">
+            <i class="fas fa-search"></i>
+            <input type="text" id="filtro-nombre" class="int-form-control"
+                   placeholder="Buscar por nombre...">
+        </div>
         <div class="int-filtros-grid">
             <div class="int-filtro-group" id="fila-cla-oficina">
                 <label>CLA</label>

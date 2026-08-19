@@ -85,7 +85,8 @@
     font-weight: 700;
     color: var(--int-dark);
     text-align: center;
-    word-break: break-all;
+    word-break: normal;
+    overflow-wrap: break-word;
 }
 
 .int-avatar-badges {
@@ -520,3 +521,120 @@
 }
 
 #int-doc-file-input { display: none; }
+
+/* ===== Toggle activo/inactivo (Casa Nacional) ===== */
+.int-badge-toggle {
+    border: none;
+    cursor: pointer;
+    font: inherit;
+}
+.int-badge-toggle:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ===== Switch booleano (campo "info") ===== */
+.int-switch {
+    position: relative;
+    display: inline-block;
+    width: 42px;
+    height: 24px;
+}
+.int-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.int-switch-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: var(--int-border);
+    transition: 0.2s;
+    border-radius: 24px;
+}
+.int-switch-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.2s;
+    border-radius: 50%;
+}
+.int-switch input:checked + .int-switch-slider {
+    background-color: var(--int-primary);
+}
+.int-switch input:checked + .int-switch-slider:before {
+    transform: translateX(18px);
+}
+
+/* ===== Modal editar roles ===== */
+.int-organizar-hint {
+    font-size: 13px;
+    color: var(--int-text-muted);
+    background: var(--int-light);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+}
+.int-roles-modal-wrap {
+    display: block;
+    width: 100%;
+}
+.int-roles-lista {
+    display: block !important;
+    width: 100%;
+}
+.int-rol-check-row {
+    display: flex !important;
+    width: 100%;
+    box-sizing: border-box;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--int-text);
+    transition: background 0.15s ease;
+    margin-bottom: 6px;
+}
+.int-rol-check-row:hover {
+    background: var(--int-light);
+}
+.int-rol-check-row input {
+    width: 17px;
+    height: 17px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.int-rol-check-row span {
+    font-size: 15px;
+}
+
+.int-roles-edit-btn {
+    margin-left: 4px;
+}
+
+/* ===== Estatus editable (embajadores) ===== */
+.int-status-view, .int-status-edit {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.int-status-view.hidden, .int-status-edit.hidden { display: none; }
+.int-status-edit select.int-form-control {
+    width: auto;
+    padding: 6px 10px;
+    font-size: 13px;
+}
+.int-status-edit .int-field-save-btn,
+.int-status-edit .int-field-cancel-btn {
+    padding: 5px 10px;
+    font-size: 12px;
+}

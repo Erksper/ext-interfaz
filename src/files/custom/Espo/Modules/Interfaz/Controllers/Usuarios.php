@@ -27,6 +27,10 @@ class Usuarios extends \Espo\Core\Controllers\Record
                 'data' => [
                     'esAdmin' => $user->isAdmin(),
                     'esCasaNacional' => $this->hasRole($userInfo, 'casa nacional'),
+                    'esGerencial' => $this->esGerencial($userInfo),
+                    'esGerente' => $this->hasRole($userInfo, 'gerente'),
+                    'esDirector' => $this->hasRole($userInfo, 'director'),
+                    'esCoordinador' => $this->hasRole($userInfo, 'coordinador'),
                     'claUsuario' => $userInfo['claId'],
                     'oficinaUsuario' => $userInfo['oficinaId'],
                     'userId' => $userId,
@@ -176,6 +180,7 @@ class Usuarios extends \Espo\Core\Controllers\Record
             $rol = $request->get('rol');
             $tipo = $request->get('tipo');
             $estado = $request->get('estado');
+            $nombre = trim((string) $request->get('nombre', ''));
             
             // Construir query base
             $sql = "SELECT DISTINCT 
@@ -191,8 +196,6 @@ class Usuarios extends \Espo\Core\Controllers\Record
                     FROM user u
                     LEFT JOIN role_user ru ON u.id = ru.user_id AND ru.deleted = 0
                     LEFT JOIN role r ON ru.role_id = r.id AND r.deleted = 0
-                    LEFT JOIN team_user tu ON u.id = tu.user_id AND tu.deleted = 0
-                    LEFT JOIN team t ON tu.team_id = t.id AND t.deleted = 0
                     LEFT JOIN entity_email_address eea 
                         ON eea.entity_id = u.id 
                         AND eea.entity_type = 'User' 
@@ -209,7 +212,12 @@ class Usuarios extends \Espo\Core\Controllers\Record
                     LEFT JOIN phone_number pn 
                         ON pn.id = epn.phone_number_id 
                         AND pn.deleted = 0
-                    WHERE u.deleted = 0";
+                    WHERE u.deleted = 0
+                    AND u.type != 'admin'
+                    AND u.id != 'system'
+                    AND LOWER(COALESCE(u.user_name,'')) != 'system'
+                    AND LOWER(CONCAT(COALESCE(u.first_name,''), ' ', COALESCE(u.last_name,''))) NOT LIKE '%por la casa%'
+                    AND LOWER(COALESCE(u.user_name,'')) NOT LIKE '%por la casa%'";
             
             $params = [];
             
@@ -217,29 +225,54 @@ class Usuarios extends \Espo\Core\Controllers\Record
             $esAdmin = $user->isAdmin();
             $esCasaNacional = $this->hasRole($userInfo, 'casa nacional');
             
-            if (!$esAdmin && !$esCasaNacional) {
-                // Usuario regular: solo puede ver usuarios de su oficina o él mismo
+            $esGerencial = $this->esGerencial($userInfo);
+
+            if (!$esAdmin && !$esCasaNacional && $esGerencial) {
+                // Gerente/Coordinador/Director: ve a todos los de su oficina (equipo).
                 $oficinaUsuario = $userInfo['oficinaId'];
                 $userId = $user->get('id');
-                
+
                 if ($oficinaUsuario) {
-                    $sql .= " AND (tu.team_id = :oficinaUsuario OR u.id = :userId)";
+                    $sql .= " AND (EXISTS (
+                        SELECT 1 FROM team_user tu_restr
+                        WHERE tu_restr.user_id = u.id
+                        AND tu_restr.team_id = :oficinaUsuario
+                        AND tu_restr.deleted = 0
+                    ) OR u.id = :userId)";
                     $params[':oficinaUsuario'] = $oficinaUsuario;
                     $params[':userId'] = $userId;
                 } else {
                     $sql .= " AND u.id = :userId";
                     $params[':userId'] = $userId;
                 }
+            } elseif (!$esAdmin && !$esCasaNacional) {
+                // Asesor u otro rol sin jerarquía: solo se ve a sí mismo.
+                $sql .= " AND u.id = :userId";
+                $params[':userId'] = $user->get('id');
             }
             
             // Aplicar filtros
+            // Nota: antes esto usaba el mismo JOIN "tu"/"t" para CLA y para oficina,
+            // lo que obligaba a que una sola fila de team_user tuviera simultáneamente
+            // team_id = claId Y team_id = oficinaId (imposible), dejando la lista vacía
+            // apenas se combinaban ambos filtros. Ahora cada filtro es independiente.
             if ($claId) {
-                $sql .= " AND t.id = :claId";
+                $sql .= " AND EXISTS (
+                    SELECT 1 FROM team_user tu_cla
+                    WHERE tu_cla.user_id = u.id
+                    AND tu_cla.team_id = :claId
+                    AND tu_cla.deleted = 0
+                )";
                 $params[':claId'] = $claId;
             }
             
             if ($oficinaId) {
-                $sql .= " AND tu.team_id = :oficinaId";
+                $sql .= " AND EXISTS (
+                    SELECT 1 FROM team_user tu_oficina
+                    WHERE tu_oficina.user_id = u.id
+                    AND tu_oficina.team_id = :oficinaId
+                    AND tu_oficina.deleted = 0
+                )";
                 $params[':oficinaId'] = $oficinaId;
             }
             
@@ -258,11 +291,22 @@ class Usuarios extends \Espo\Core\Controllers\Record
                 $params[':estado'] = (int)$estado;
             }
             
+            if ($nombre !== '') {
+                $sql .= " AND LOWER(CONCAT(COALESCE(u.first_name,''), ' ', COALESCE(u.last_name,''), ' ', COALESCE(u.user_name,''))) LIKE :nombre";
+                $params[':nombre'] = '%' . mb_strtolower($nombre) . '%';
+            }
+            
             $sql .= " GROUP BY u.id ORDER BY u.first_name, u.last_name, u.user_name";
             
             // Query para contar total
-            $sqlCount = preg_replace('/ORDER BY.*/', '', $sql);
-            $sqlCount = str_replace('GROUP BY u.id', '', $sqlCount);
+            // OJO: antes esto quitaba el "GROUP BY u.id", pero el SELECT tiene
+            // GROUP_CONCAT(...) (una función agregada) mezclado con columnas sin
+            // agregar (u.id, u.first_name, etc). Sin GROUP BY, esa combinación
+            // colapsa TODO el resultado a una sola fila -> el COUNT(*) exterior
+            // siempre daba 1, sin importar cuántos usuarios hubiera en realidad.
+            // Ahora se mantiene el GROUP BY dentro de la subconsulta (1 fila por
+            // usuario) y se cuentan esas filas.
+            $sqlCount = preg_replace('/ORDER BY.*/s', '', $sql);
             $sqlCount = "SELECT COUNT(*) as total FROM (" . $sqlCount . ") as subquery";
             
             $pdo = $entityManager->getPDO();
@@ -402,6 +446,18 @@ class Usuarios extends \Espo\Core\Controllers\Record
             $pdo = $entityManager->getPDO();
             $siteUrl = rtrim($this->getContainer()->get('config')->get('siteUrl', ''), '/');
 
+            $user = $this->getContainer()->get('user');
+            $userInfo = $this->getUserFullInfo($user->get('id'));
+            $esAdmin = $user->isAdmin();
+            $esCasaNacional = $this->hasRole($userInfo, 'casa nacional');
+
+            if (!$this->puedeVerPerfil($userInfo, $esAdmin, $esCasaNacional, $targetUserId, $pdo)) {
+                return ['success' => false, 'error' => 'No tiene permisos para ver este perfil'];
+            }
+
+            $puedeEditarCompartidos = $this->puedeEditarPerfil($userInfo, $esAdmin, $esCasaNacional, $targetUserId, $pdo);
+            $puedeEditarTodo = $esAdmin || $esCasaNacional;
+
             $sql = "SELECT 
                         u.id,
                         u.user_name,
@@ -420,6 +476,8 @@ class Usuarios extends \Espo\Core\Controllers\Record
                         u.c_u_r_l_perfil,
                         u.c_carnet,
                         u.c_tipode_carnet,
+                        u.c_instagram,
+                        u.c_info,
                         ea.lower as emailAddress,
                         pn.numeric as phoneNumber
                     FROM user u
@@ -569,7 +627,13 @@ class Usuarios extends \Espo\Core\Controllers\Record
                     'defaultTeamName'   => $defaultTeamName,
                     'teams'             => $teams,
                     'roles'             => $roles,
-                    'notas'             => $notas
+                    'notas'             => $notas,
+                    'instagram'         => $userData['c_instagram'] ?? null,
+                    'info'              => isset($userData['c_info']) ? (bool) $userData['c_info'] : false,
+                    'permisos'          => [
+                        'puedeEditarCompartidos' => $puedeEditarCompartidos,
+                        'puedeEditarTodo'         => $puedeEditarTodo
+                    ]
                 ]
             ];
 
@@ -647,18 +711,45 @@ class Usuarios extends \Espo\Core\Controllers\Record
                 return ['success' => false, 'error' => 'Datos incompletos'];
             }
 
-            // Campos permitidos para edición
-            $camposPermitidos = [
-                'first_name', 'last_name', 'title', 'gender',
-                'c_descripcionperfil', 'c_tipode_carnet'
+            // Campos que solo Casa Nacional/Admin puede editar
+            $camposRestringidos = [
+                'first_name', 'last_name', 'title', 'gender', 'c_tipode_carnet'
             ];
+
+            // Campos que además puede editar: el propio usuario (si son suyos),
+            // o un gerente/coordinador/director si el usuario objetivo es de su equipo
+            $camposCompartidos = [
+                'c_descripcionperfil', 'c_instagram', 'c_info'
+            ];
+
+            $camposPermitidos = array_merge($camposRestringidos, $camposCompartidos);
 
             if (!in_array($campo, $camposPermitidos)) {
                 return ['success' => false, 'error' => 'Campo no editable'];
             }
 
+            $user = $this->getContainer()->get('user');
+            $userInfo = $this->getUserFullInfo($user->get('id'));
+            $esAdmin = $user->isAdmin();
+            $esCasaNacional = $this->hasRole($userInfo, 'casa nacional');
+
             $entityManager = $this->getContainer()->get('entityManager');
             $pdo = $entityManager->getPDO();
+
+            if (in_array($campo, $camposRestringidos)) {
+                if (!$esAdmin && !$esCasaNacional) {
+                    return ['success' => false, 'error' => 'No tiene permisos para editar este campo'];
+                }
+            } else {
+                if (!$this->puedeEditarPerfil($userInfo, $esAdmin, $esCasaNacional, $targetUserId, $pdo)) {
+                    return ['success' => false, 'error' => 'No tiene permisos para editar este perfil'];
+                }
+            }
+
+            // c_info es booleano
+            if ($campo === 'c_info') {
+                $valor = $valor ? 1 : 0;
+            }
 
             $sql = "UPDATE user SET {$campo} = ?, modified_at = NOW() WHERE id = ? AND deleted = 0";
             $sth = $pdo->prepare($sql);
@@ -686,6 +777,15 @@ class Usuarios extends \Espo\Core\Controllers\Record
 
             $entityManager = $this->getContainer()->get('entityManager');
             $pdo = $entityManager->getPDO();
+
+            $user = $this->getContainer()->get('user');
+            $userInfo = $this->getUserFullInfo($user->get('id'));
+            $esAdmin = $user->isAdmin();
+            $esCasaNacional = $this->hasRole($userInfo, 'casa nacional');
+
+            if (!$this->puedeEditarPerfil($userInfo, $esAdmin, $esCasaNacional, $targetUserId, $pdo)) {
+                return ['success' => false, 'error' => 'No tiene permisos para editar este perfil'];
+            }
 
             // Verificar si ya tiene email
             $sqlCheck = "SELECT ea.id 
@@ -734,6 +834,15 @@ class Usuarios extends \Espo\Core\Controllers\Record
 
             $entityManager = $this->getContainer()->get('entityManager');
             $pdo = $entityManager->getPDO();
+
+            $user = $this->getContainer()->get('user');
+            $userInfo = $this->getUserFullInfo($user->get('id'));
+            $esAdmin = $user->isAdmin();
+            $esCasaNacional = $this->hasRole($userInfo, 'casa nacional');
+
+            if (!$this->puedeEditarPerfil($userInfo, $esAdmin, $esCasaNacional, $targetUserId, $pdo)) {
+                return ['success' => false, 'error' => 'No tiene permisos para editar este perfil'];
+            }
 
             $sqlCheck = "SELECT pn.id 
                         FROM phone_number pn
@@ -810,6 +919,180 @@ class Usuarios extends \Espo\Core\Controllers\Record
         return in_array($roleNameLower, $userInfo['roles']);
     }
     
+    private function esGerencial($userInfo)
+    {
+        return $this->hasRole($userInfo, 'gerente')
+            || $this->hasRole($userInfo, 'coordinador')
+            || $this->hasRole($userInfo, 'director');
+    }
+
+    // Un usuario está en la misma oficina (equipo) que otro
+    private function mismaOficina($pdo, $userIdA, $oficinaId)
+    {
+        if (!$oficinaId) return false;
+
+        $sth = $pdo->prepare(
+            "SELECT 1 FROM team_user WHERE user_id = ? AND team_id = ? AND deleted = 0 LIMIT 1"
+        );
+        $sth->execute([$userIdA, $oficinaId]);
+
+        return (bool) $sth->fetch();
+    }
+
+    // ¿Puede $userInfo (el usuario logueado) VER el perfil de $targetUserId?
+    // Admin/Casa Nacional: todos. Gerente/Coordinador/Director: los de su oficina.
+    // Cualquier otro: solo a sí mismo.
+    private function puedeVerPerfil($userInfo, $esAdmin, $esCasaNacional, $targetUserId, $pdo)
+    {
+        if ($esAdmin || $esCasaNacional) {
+            return true;
+        }
+
+        if ($targetUserId === $userInfo['id']) {
+            return true;
+        }
+
+        if ($this->esGerencial($userInfo)) {
+            return $this->mismaOficina($pdo, $targetUserId, $userInfo['oficinaId']);
+        }
+
+        return false;
+    }
+
+    // ¿Puede $userInfo (el usuario logueado) EDITAR los campos "compartidos"
+    // (instagram, info, teléfono, correo, descripción) de $targetUserId?
+    // Misma regla que puedeVerPerfil, pero se deja separado por claridad y
+    // porque a futuro pueden divergir.
+    private function puedeEditarPerfil($userInfo, $esAdmin, $esCasaNacional, $targetUserId, $pdo)
+    {
+        return $this->puedeVerPerfil($userInfo, $esAdmin, $esCasaNacional, $targetUserId, $pdo);
+    }
+
+    public function getActionGetRolesDisponibles($params, $data, $request)
+    {
+        try {
+            $user = $this->getContainer()->get('user');
+            $userInfo = $this->getUserFullInfo($user->get('id'));
+            $esAdmin = $user->isAdmin();
+            $esCasaNacional = $this->hasRole($userInfo, 'casa nacional');
+
+            if (!$esAdmin && !$esCasaNacional) {
+                return ['success' => false, 'error' => 'No tiene permisos para esta acción'];
+            }
+
+            $entityManager = $this->getContainer()->get('entityManager');
+            $pdo = $entityManager->getPDO();
+
+            $sth = $pdo->prepare("SELECT id, name FROM role WHERE deleted = 0 ORDER BY name");
+            $sth->execute();
+
+            $roles = [];
+            while ($row = $sth->fetch(\PDO::FETCH_ASSOC)) {
+                $roles[] = ['id' => $row['id'], 'name' => $row['name']];
+            }
+
+            return ['success' => true, 'data' => $roles];
+
+        } catch (\Exception $e) {
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    public function postActionActualizarRoles($params, $data, $request)
+    {
+        try {
+            $user = $this->getContainer()->get('user');
+            $userInfo = $this->getUserFullInfo($user->get('id'));
+            $esAdmin = $user->isAdmin();
+            $esCasaNacional = $this->hasRole($userInfo, 'casa nacional');
+
+            if (!$esAdmin && !$esCasaNacional) {
+                return ['success' => false, 'error' => 'No tiene permisos para editar roles'];
+            }
+
+            $body = $request->getParsedBody();
+            if (is_object($body)) $body = (array) $body;
+
+            $targetUserId = $body['userId'] ?? null;
+            $roleIds      = $body['roleIds'] ?? null;
+
+            if (!$targetUserId || !is_array($roleIds)) {
+                return ['success' => false, 'error' => 'Datos incompletos'];
+            }
+
+            $entityManager = $this->getContainer()->get('entityManager');
+            $targetUser = $entityManager->getEntity('User', $targetUserId);
+
+            if (!$targetUser) {
+                return ['success' => false, 'error' => 'Usuario no encontrado'];
+            }
+
+            $pdo = $entityManager->getPDO();
+            $sth = $pdo->prepare(
+                "SELECT role_id FROM role_user WHERE user_id = ? AND deleted = 0"
+            );
+            $sth->execute([$targetUserId]);
+            $rolesActuales = array_column($sth->fetchAll(\PDO::FETCH_ASSOC), 'role_id');
+
+            $aAgregar   = array_diff($roleIds, $rolesActuales);
+            $aQuitar    = array_diff($rolesActuales, $roleIds);
+
+            $relation = $entityManager->getRDBRepository('User')->getRelation($targetUser, 'roles');
+
+            foreach ($aAgregar as $roleId) {
+                $relation->relateById($roleId);
+            }
+
+            foreach ($aQuitar as $roleId) {
+                $relation->unrelateById($roleId);
+            }
+
+            return ['success' => true];
+
+        } catch (\Exception $e) {
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    public function postActionActualizarActivo($params, $data, $request)
+    {
+        try {
+            $user = $this->getContainer()->get('user');
+            $userInfo = $this->getUserFullInfo($user->get('id'));
+            $esAdmin = $user->isAdmin();
+            $esCasaNacional = $this->hasRole($userInfo, 'casa nacional');
+
+            if (!$esAdmin && !$esCasaNacional) {
+                return ['success' => false, 'error' => 'No tiene permisos para esta acción'];
+            }
+
+            $body = $request->getParsedBody();
+            if (is_object($body)) $body = (array) $body;
+
+            $targetUserId = $body['userId'] ?? null;
+            $activo       = array_key_exists('activo', $body) ? (bool) $body['activo'] : null;
+
+            if (!$targetUserId || $activo === null) {
+                return ['success' => false, 'error' => 'Datos incompletos'];
+            }
+
+            if ($targetUserId === $user->get('id') && !$activo) {
+                return ['success' => false, 'error' => 'No puedes desactivar tu propia cuenta'];
+            }
+
+            $entityManager = $this->getContainer()->get('entityManager');
+            $pdo = $entityManager->getPDO();
+
+            $sth = $pdo->prepare("UPDATE user SET is_active = ?, modified_at = NOW() WHERE id = ? AND deleted = 0");
+            $sth->execute([$activo ? 1 : 0, $targetUserId]);
+
+            return ['success' => true];
+
+        } catch (\Exception $e) {
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
     private function getUserFullInfo($userId)
     {
         try {

@@ -2,9 +2,12 @@
     "labels": {
         "Interfaz": "Interfaz",
         "Lista de Usuarios": "Lista de Usuarios",
-        "ListaUsuarios": "Lista de Usuarios"
+        "ListaUsuarios": "Lista de Usuarios",
+        "Guías": "Guías",
+        "ListaGuias": "Guías"
     },
     "messages": {
-        "No se encontraron usuarios": "No se encontraron usuarios con los filtros seleccionados"
+        "No se encontraron usuarios": "No se encontraron usuarios con los filtros seleccionados",
+        "No se encontraron guías": "Aún no se han subido guías o documentos"
     }
 }

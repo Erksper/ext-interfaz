@@ -9,7 +9,8 @@ define("interfaz:views/lista-embajadores", ["view"], function (Dep) {
                 cla: null,
                 oficina: null,
                 asesor: null,
-                status: null
+                status: null,
+                nombre: null
             };
             this.paginacion = {
                 pagina: this.paginaActual,
@@ -54,6 +55,14 @@ define("interfaz:views/lista-embajadores", ["view"], function (Dep) {
 
             this.$el.find('#filtro-oficina').on('change', function () {
                 self.onOficinaChange($(this).val());
+            });
+
+            this.$el.find('#filtro-nombre').on('keydown', function (e) {
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    e.preventDefault();
+                    self.paginacion.pagina = 1;
+                    self.aplicarFiltros();
+                }
             });
 
             this.$el.find('#btn-crear-embajador').on('click', function () {
@@ -229,7 +238,8 @@ define("interfaz:views/lista-embajadores", ["view"], function (Dep) {
                 cla:     this.$el.find('#filtro-cla').val()    || null,
                 oficina: this.$el.find('#filtro-oficina').val() || null,
                 asesor:  this.$el.find('#filtro-asesor').val()  || null,
-                status:  this.$el.find('#filtro-status').val()  || null
+                status:  this.$el.find('#filtro-status').val()  || null,
+                nombre:  (this.$el.find('#filtro-nombre').val() || '').trim() || null
             };
             this.paginacion.pagina = 1;
             this.cargarEmbajadores();
@@ -244,8 +254,9 @@ define("interfaz:views/lista-embajadores", ["view"], function (Dep) {
                 .html('<option value="">Todos los asesores</option>')
                 .prop('disabled', true);
             this.$el.find('#filtro-status').val('');
+            this.$el.find('#filtro-nombre').val('');
 
-            this.filtros = { cla: null, oficina: null, asesor: null, status: null };
+            this.filtros = { cla: null, oficina: null, asesor: null, status: null, nombre: null };
             this.paginacion.pagina = 1;
             this.cargarEmbajadores();
         },
@@ -264,6 +275,7 @@ define("interfaz:views/lista-embajadores", ["view"], function (Dep) {
             if (this.filtros.oficina) params.oficinaId = this.filtros.oficina;
             if (this.filtros.asesor)  params.asesorId  = this.filtros.asesor;
             if (this.filtros.status)  params.status    = this.filtros.status;
+            if (this.filtros.nombre)  params.nombre    = this.filtros.nombre;
 
             const self = this;
             Espo.Ajax.getRequest("Embajadores/action/getLista", params)

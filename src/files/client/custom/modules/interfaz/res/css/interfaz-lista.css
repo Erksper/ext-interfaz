@@ -164,6 +164,8 @@
     font-weight: 700;
     color: var(--int-dark);
     margin-bottom: 12px;
+    word-break: normal;
+    overflow-wrap: break-word;
 }
 
 .int-usuario-detalle {
@@ -252,4 +254,29 @@
     .int-filtros-grid { grid-template-columns: 1fr; }
     .int-usuario-card .row > div { text-align: center; margin-bottom: 15px; }
     .int-usuario-avatar { margin: 0 auto 15px; }
+}
+
+/* Búsqueda por nombre */
+.int-filtro-busqueda {
+    position: relative;
+    margin-bottom: 16px;
+}
+.int-filtro-busqueda i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--int-text-muted);
+    font-size: 14px;
+}
+.int-filtro-busqueda input {
+    width: 100%;
+    padding: 10px 14px 10px 38px;
+    border: 1px solid var(--int-border);
+    border-radius: 8px;
+    font-size: 14px;
+}
+.int-filtro-busqueda input:focus {
+    outline: none;
+    border-color: var(--int-primary);
 }

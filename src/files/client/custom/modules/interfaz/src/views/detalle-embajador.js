@@ -5,10 +5,34 @@ define("interfaz:views/detalle-embajador", ["view"], function (Dep) {
         setup: function () {
             this.embajadorId = this.options.embajadorId;
             this.data = null;
+            this.permisos = {
+                esAdmin: false, esCasaNacional: false,
+                esGerente: false, esDirector: false, esCoordinador: false
+            };
         },
 
         afterRender: function () {
-            this.cargarDetalle();
+            this.cargarPermisos();
+        },
+
+        cargarPermisos: function () {
+            const self = this;
+            Espo.Ajax.getRequest("Usuarios/action/getUserInfo")
+                .then(function (response) {
+                    if (response.success && response.data) {
+                        self.permisos = {
+                            esAdmin: response.data.esAdmin,
+                            esCasaNacional: response.data.esCasaNacional,
+                            esGerente: response.data.esGerente,
+                            esDirector: response.data.esDirector,
+                            esCoordinador: response.data.esCoordinador
+                        };
+                    }
+                    self.cargarDetalle();
+                })
+                .catch(function () {
+                    self.cargarDetalle();
+                });
         },
 
         cargarDetalle: function () {
@@ -54,6 +78,26 @@ define("interfaz:views/detalle-embajador", ["view"], function (Dep) {
                 '3': { label: 'Inactivo',   color: '#e74c3c' }
             };
             const st = statusMap[d.status] || { label: d.status || '—', color: '#666' };
+            const puedeEditarStatus = !!(this.permisos.esAdmin || this.permisos.esCasaNacional
+                || this.permisos.esGerente || this.permisos.esDirector || this.permisos.esCoordinador);
+
+            const statusOptions = Object.keys(statusMap).map(function (key) {
+                return `<option value="${key}" ${key === String(d.status) ? 'selected' : ''}>${statusMap[key].label}</option>`;
+            }).join('');
+
+            const statusHtml = puedeEditarStatus
+                ? `<span class="int-status-view" id="int-status-view">
+                       <span class="int-badge" style="background:${st.color};color:white;">${this.escapeHtml(st.label)}</span>
+                       <button class="int-field-edit-btn" id="int-btn-editar-status" title="Cambiar estatus">
+                           <i class="fas fa-pencil-alt"></i>
+                       </button>
+                   </span>
+                   <span class="int-status-edit hidden" id="int-status-edit">
+                       <select id="int-status-select" class="int-form-control">${statusOptions}</select>
+                       <button class="int-field-save-btn" id="int-btn-guardar-status">Guardar</button>
+                       <button class="int-field-cancel-btn" id="int-btn-cancelar-status">Cancelar</button>
+                   </span>`
+                : `<span class="int-badge" style="background:${st.color};color:white;">${this.escapeHtml(st.label)}</span>`;
 
             const qrHtml = d.qrImageUrl
                 ? `<a href="${this.escapeHtml(d.qr || '#')}" target="_blank" title="Abrir URL del QR">
@@ -92,9 +136,7 @@ define("interfaz:views/detalle-embajador", ["view"], function (Dep) {
                     <div class="int-avatar-username-label">Código</div>
                     <div class="int-avatar-username">${this.escapeHtml(d.code || '—')}</div>
                     <div class="int-avatar-badges">
-                        <span class="int-badge" style="background:${st.color};color:white;">
-                            ${this.escapeHtml(st.label)}
-                        </span>
+                        ${statusHtml}
                     </div>
                 </div>
 
@@ -116,6 +158,8 @@ define("interfaz:views/detalle-embajador", ["view"], function (Dep) {
                         ${this.renderFieldReadonly('Total de referidos', d.recordCount !== null ? String(d.recordCount) : null)}
                         ${this.renderFieldReadonly('Carnet', d.carnet, 'link')}
                         ${this.renderField('Porcentaje del embajador', 'porcentaje', d.porcentaje, true, 'porcentaje')}
+                        ${this.renderField('Usuario', 'c_usuario', d.usuario, true)}
+                        ${this.renderPasswordField(d.passwordEstablecida)}
                     </div>
                     ${this.renderFieldText('Ocupación', 'description', d.description, true)}
                     <div class="int-field" style="margin-top:16px;">
@@ -147,7 +191,7 @@ define("interfaz:views/detalle-embajador", ["view"], function (Dep) {
                         </div>
                     </div>
                     <div class="int-field">
-                        <span class="int-field-label">Usuario Asignado</span>
+                        <span class="int-field-label">Asesor Asignado</span>
                         <div class="int-tags-wrap">
                             ${d.assignedUserName
                                 ? `<span class="int-tag">${this.escapeHtml(d.assignedUserName)}</span>`
@@ -253,7 +297,7 @@ define("interfaz:views/detalle-embajador", ["view"], function (Dep) {
                 inputType = 'email';
             } else if (tipo === 'porcentaje') {
                 inputType = 'number';
-                inputAttrs = 'min="0" max="100" step="0.01"';
+                inputAttrs = 'min="0" max="35" step="0.1"';
             }
 
             return `
@@ -300,6 +344,36 @@ define("interfaz:views/detalle-embajador", ["view"], function (Dep) {
                         <button class="int-field-cancel-btn" data-campo="${campo}">Cancelar</button>
                     </div>
                 </div>` : ''}
+            </div>`;
+        },
+
+        renderPasswordField: function (establecida) {
+            // Campo de solo-escritura: nunca se muestra el valor real (ni el hash),
+            // solo si está establecida o no. Al guardar se manda como texto plano al
+            // endpoint especial guardarPassword, que hashea vía el Formula del back.
+            const displayVal = establecida
+                ? '<span class="int-field-value">•••••••• (establecida)</span>'
+                : '<span class="int-field-value empty">No establecida</span>';
+
+            return `
+            <div class="int-field" data-campo="c_password">
+                <span class="int-field-label">Contraseña</span>
+                <div class="int-field-view-mode">
+                    <div class="int-field-value-wrap">
+                        ${displayVal}
+                        <button class="int-field-edit-btn" data-campo="c_password" title="Cambiar contraseña">
+                            <i class="fas fa-pencil-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="int-field-edit-mode">
+                    <input type="password" class="int-field-input" data-campo="c_password"
+                        placeholder="Nueva contraseña" autocomplete="new-password">
+                    <div class="int-field-actions">
+                        <button class="int-field-save-btn" data-campo="c_password">Guardar</button>
+                        <button class="int-field-cancel-btn" data-campo="c_password">Cancelar</button>
+                    </div>
+                </div>
             </div>`;
         },
 
@@ -353,6 +427,21 @@ define("interfaz:views/detalle-embajador", ["view"], function (Dep) {
                 self.guardarCampo(campo, valor, fieldEl);
             });
 
+            // Estatus (solo gestión/casa nacional/admin ven este botón)
+            container.on('click', '#int-btn-editar-status', function () {
+                container.find('#int-status-view').addClass('hidden');
+                container.find('#int-status-edit').removeClass('hidden');
+            });
+
+            container.on('click', '#int-btn-cancelar-status', function () {
+                container.find('#int-status-edit').addClass('hidden');
+                container.find('#int-status-view').removeClass('hidden');
+            });
+
+            container.on('click', '#int-btn-guardar-status', function () {
+                self.guardarStatus(container.find('#int-status-select').val());
+            });
+
             container.find('#int-btn-crear-nota').on('click', function () {
                 const texto = container.find('#int-nueva-nota-input').val().trim();
                 if (!texto) {
@@ -401,10 +490,21 @@ define("interfaz:views/detalle-embajador", ["view"], function (Dep) {
                 body = { embajadorId: this.embajadorId, valor: valor };
             } else if (campo === 'porcentaje') {
                 const num = parseFloat(valor);
-                if (valor !== '' && (isNaN(num) || num < 0 || num > 100)) {
-                    Espo.Ui.error('El porcentaje debe ser un número entre 0 y 100');
+                if (valor !== '' && (isNaN(num) || num < 0 || num > 35)) {
+                    Espo.Ui.error('El porcentaje debe ser un número entre 0% y 35%, con máximo 1 decimal');
                     return;
                 }
+                if (valor !== '') {
+                    valor = Math.round(num * 10) / 10;
+                    body.valor = valor;
+                }
+            } else if (campo === 'c_password') {
+                if (!valor || valor.length < 4) {
+                    Espo.Ui.error('La contraseña debe tener al menos 4 caracteres');
+                    return;
+                }
+                endpoint = 'Embajadores/action/guardarPassword';
+                body = { embajadorId: this.embajadorId, valor: valor };
             }
 
             Espo.Ajax.postRequest(endpoint, body)
@@ -414,14 +514,18 @@ define("interfaz:views/detalle-embajador", ["view"], function (Dep) {
                         if (campo === 'porcentaje' && valor !== '') {
                             displayVal = valor + '%';
                         }
+                        if (campo === 'c_password') {
+                            displayVal = '•••••••• (establecida)';
+                        }
 
                         fieldEl.find('.int-field-view-mode .int-field-value')
                             .text(displayVal || 'No especificado')
                             .toggleClass('empty', !displayVal);
                         fieldEl.find('.int-field-view-mode').removeClass('hidden');
                         fieldEl.find('.int-field-edit-mode').removeClass('active');
+                        fieldEl.find('.int-field-input').val('');
 
-                        Espo.Ui.success('Campo actualizado correctamente');
+                        Espo.Ui.success(campo === 'c_password' ? 'Contraseña actualizada' : 'Campo actualizado correctamente');
                     } else {
                         Espo.Ui.error(response.error || 'Error al guardar');
                     }
@@ -434,6 +538,41 @@ define("interfaz:views/detalle-embajador", ["view"], function (Dep) {
         subirFoto: function (file) {
             Espo.Ui.notify('Subiendo foto...');
             this.subirFotoXhr(file);
+        },
+
+        guardarStatus: function (nuevoStatus) {
+            const self = this;
+            const container = this.$el.find('#detalle-container');
+
+            const statusMap = {
+                '0': { label: 'Pendiente',  color: '#3498db' },
+                '1': { label: 'En proceso', color: '#f39c12' },
+                '2': { label: 'Activo',     color: '#27ae60' },
+                '3': { label: 'Inactivo',   color: '#e74c3c' }
+            };
+
+            Espo.Ajax.postRequest('Embajadores/action/guardarCampo', {
+                embajadorId: this.embajadorId,
+                campo: 'status',
+                valor: nuevoStatus
+            })
+            .then(function (response) {
+                if (response.success) {
+                    const st = statusMap[nuevoStatus] || { label: nuevoStatus, color: '#666' };
+                    container.find('#int-status-view .int-badge')
+                        .css('background', st.color)
+                        .text(st.label);
+                    container.find('#int-status-edit').addClass('hidden');
+                    container.find('#int-status-view').removeClass('hidden');
+                    if (self.data) self.data.status = nuevoStatus;
+                    Espo.Ui.success('Estatus actualizado');
+                } else {
+                    Espo.Ui.error(response.error || 'No se pudo actualizar el estatus');
+                }
+            })
+            .catch(function () {
+                Espo.Ui.error('Error de conexión al actualizar el estatus');
+            });
         },
 
         subirFotoXhr: function (file) {

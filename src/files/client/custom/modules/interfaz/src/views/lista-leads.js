@@ -25,7 +25,9 @@ define("interfaz:views/lista-leads", ["view"], function (Dep) {
                 oficina: null,
                 asesor: null,
                 interes: null,
-                stage: null
+                stage: null,
+                fechaDesde: null,
+                fechaHasta: null
             };
             this.paginacion = {
                 pagina: this.paginaActual,
@@ -232,7 +234,9 @@ define("interfaz:views/lista-leads", ["view"], function (Dep) {
                 oficina: this.$el.find('#filtro-oficina').val() || null,
                 asesor:  this.$el.find('#filtro-asesor').val()  || null,
                 interes: this.$el.find('#filtro-interes').val() || null,
-                stage:   this.$el.find('#filtro-stage').val()   || null
+                stage:   this.$el.find('#filtro-stage').val()   || null,
+                fechaDesde: this.$el.find('#filtro-fecha-desde').val() || null,
+                fechaHasta: this.$el.find('#filtro-fecha-hasta').val() || null
             };
 
             if (this.modoVista === 'lista') {
@@ -252,8 +256,10 @@ define("interfaz:views/lista-leads", ["view"], function (Dep) {
                 .prop('disabled', true);
             this.$el.find('#filtro-interes').val('');
             this.$el.find('#filtro-stage').val('');
+            this.$el.find('#filtro-fecha-desde').val('');
+            this.$el.find('#filtro-fecha-hasta').val('');
 
-            this.filtros = { cla: null, oficina: null, asesor: null, interes: null, stage: null };
+            this.filtros = { cla: null, oficina: null, asesor: null, interes: null, stage: null, fechaDesde: null, fechaHasta: null };
             this.paginacion.pagina = 1;
             this.kanbanPaginas = {};
 
@@ -281,6 +287,8 @@ define("interfaz:views/lista-leads", ["view"], function (Dep) {
             if (this.filtros.asesor)  params.asesorId  = this.filtros.asesor;
             if (this.filtros.interes) params.interes   = this.filtros.interes;
             if (this.filtros.stage)   params.stage     = this.filtros.stage;
+            if (this.filtros.fechaDesde) params.fechaDesde = this.filtros.fechaDesde;
+            if (this.filtros.fechaHasta) params.fechaHasta = this.filtros.fechaHasta;
 
             const self = this;
             Espo.Ajax.getRequest("Leads/action/getLista", params)
@@ -356,6 +364,10 @@ define("interfaz:views/lista-leads", ["view"], function (Dep) {
                                 <div class="int-usuario-detalle-item">
                                     <i class="fas fa-user-tie"></i>
                                     <span>${self.escapeHtml(lead.assignedUserName || '—')}</span>
+                                </div>
+                                <div class="int-usuario-detalle-item">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <span>${self.formatearFecha(lead.createdAt)}</span>
                                 </div>
                             </div>
                         </div>
@@ -438,6 +450,8 @@ define("interfaz:views/lista-leads", ["view"], function (Dep) {
             if (this.filtros.asesor)  params.asesorId  = this.filtros.asesor;
             if (this.filtros.interes) params.interes   = this.filtros.interes;
             if (this.filtros.stage)   params.stage     = this.filtros.stage;
+            if (this.filtros.fechaDesde) params.fechaDesde = this.filtros.fechaDesde;
+            if (this.filtros.fechaHasta) params.fechaHasta = this.filtros.fechaHasta;
 
             const self = this;
             Espo.Ajax.getRequest("Leads/action/getKanban", params)
@@ -553,6 +567,13 @@ define("interfaz:views/lista-leads", ["view"], function (Dep) {
                 <i class="fas fa-chevron-right"></i></button>`;
             html += '</div>';
             return html;
+        },
+
+        formatearFecha: function (fecha) {
+            if (!fecha) return '—';
+            const d = new Date(fecha.replace(' ', 'T'));
+            if (isNaN(d.getTime())) return '—';
+            return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
         },
 
         escapeHtml: function (text) {

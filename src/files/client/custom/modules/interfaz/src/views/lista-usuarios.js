@@ -10,7 +10,8 @@ define("interfaz:views/lista-usuarios", ["view"], function (Dep) {
                 oficina: null,
                 rol: null,
                 tipo: null,
-                estado: null
+                estado: null,
+                nombre: null
             };
             this.paginacion = {
                 pagina: this.paginaActual,
@@ -53,6 +54,13 @@ define("interfaz:views/lista-usuarios", ["view"], function (Dep) {
             
             this.$el.find('#filtro-oficina').on('change', function () {
                 self.onOficinaChange($(this).val());
+            });
+
+            this.$el.find('#filtro-nombre').on('keydown', function (e) {
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    e.preventDefault();
+                    self.aplicarFiltros();
+                }
             });
         },
 
@@ -163,7 +171,8 @@ define("interfaz:views/lista-usuarios", ["view"], function (Dep) {
                 oficina: this.$el.find('#filtro-oficina').val() || null,
                 rol: this.$el.find('#filtro-rol').val() || null,
                 tipo: this.$el.find('#filtro-tipo').val() || null,
-                estado: this.$el.find('#filtro-estado').val() || null
+                estado: this.$el.find('#filtro-estado').val() || null,
+                nombre: (this.$el.find('#filtro-nombre').val() || '').trim() || null
             };
             
             console.log("🔍 Filtros aplicados:", this.filtros);
@@ -177,8 +186,9 @@ define("interfaz:views/lista-usuarios", ["view"], function (Dep) {
             this.$el.find('#filtro-rol').val('');
             this.$el.find('#filtro-tipo').val('');
             this.$el.find('#filtro-estado').val('');
+            this.$el.find('#filtro-nombre').val('');
             
-            this.filtros = { cla: null, oficina: null, rol: null, tipo: null, estado: null };
+            this.filtros = { cla: null, oficina: null, rol: null, tipo: null, estado: null, nombre: null };
             this.paginacion.pagina = 1;
             this.cargarUsuarios();
         },
@@ -199,6 +209,7 @@ define("interfaz:views/lista-usuarios", ["view"], function (Dep) {
             if (this.filtros.rol) params.rol = this.filtros.rol;
             if (this.filtros.tipo) params.tipo = this.filtros.tipo;
             if (this.filtros.estado !== null && this.filtros.estado !== '') params.estado = this.filtros.estado;
+            if (this.filtros.nombre) params.nombre = this.filtros.nombre;
             
             console.log("📡 Cargando usuarios con params:", params);
             

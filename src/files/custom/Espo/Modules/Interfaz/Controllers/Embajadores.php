@@ -27,6 +27,7 @@ class Embajadores extends \Espo\Core\Controllers\Record
             $oficinaId = $request->get('oficinaId');
             $asesorId  = $request->get('asesorId');
             $status    = $request->get('status');
+            $nombre    = trim((string) $request->get('nombre', ''));
 
             $esAdmin   = $user->isAdmin();
             $esCN      = $esAdmin || $userInfo['esCasaNacional'];
@@ -96,6 +97,11 @@ class Embajadores extends \Espo\Core\Controllers\Record
             if ($status !== null && $status !== '') {
                 $sql .= " AND a.status = :status";
                 $params[':status'] = $status;
+            }
+
+            if ($nombre !== '') {
+                $sql .= " AND LOWER(CONCAT(COALESCE(a.first_name,''), ' ', COALESCE(a.last_name,''))) LIKE :nombre";
+                $params[':nombre'] = '%' . mb_strtolower($nombre) . '%';
             }
 
             $sql .= " ORDER BY a.created_at DESC";
@@ -187,6 +193,8 @@ class Embajadores extends \Espo\Core\Controllers\Record
                         a.carnet,
                         a.porcentaje,
                         a.qr,
+                        a.c_usuario,
+                        a.c_password,
                         a.photo_id,
                         a.assigned_user_id,
                         a.created_at,
@@ -318,6 +326,11 @@ class Embajadores extends \Espo\Core\Controllers\Record
                     'carnet'            => $row['carnet'],
                     'description'       => $row['description'],
                     'porcentaje'        => $row['porcentaje'],
+                    'usuario'           => $row['c_usuario'],
+                    // El valor de cPassword (hash) NUNCA se manda al frontend, solo
+                    // si tiene uno establecido o no, para poder mostrar el campo
+                    // como "Establecida" / "No establecida" sin exponer el hash.
+                    'passwordEstablecida' => !empty($row['c_password']),
                     'qr'                => $row['qr'],
                     'qrImageUrl'        => $qrImageUrl,
                     'photoUrl'          => $photoUrl,
@@ -359,12 +372,13 @@ class Embajadores extends \Espo\Core\Controllers\Record
             $entityManager->saveEntity($entity);
             $embId = $entity->getId();
 
-            // Generar carnet y QR usando el assignedUserId
-            $carnetUrl = 'https://portal.century21venezuela.com/eb/carnet.php?lerr=' . $embId;
-            $qrTexto   = 'https://portal.century21venezuela.com/eb/?lerr=' . $userId;
-
-            $pdo->prepare("UPDATE c_ambassador SET carnet = ?, qr = ? WHERE id = ?")
-                ->execute([$carnetUrl, $qrTexto, $embId]);
+            // El carnet y el QR ya NO se arman aquí a mano: el Formula "Before Save
+            // Script" configurado en Entity Manager sobre CAmbassador los genera
+            // automáticamente en cada saveEntity() usando el id real de la entidad
+            // (https://portal.century21.com.ve/eb/carnet.php?lerr=<id> y
+            // https://portal.century21.com.ve/eb/?lerr=<id>). El UPDATE manual que
+            // había aquí antes los pisaba con una URL vieja (century21venezuela.com)
+            // justo después de que el Formula los dejara bien.
 
             return [
                 'success' => true,
@@ -390,24 +404,42 @@ class Embajadores extends \Espo\Core\Controllers\Record
                 return ['success' => false, 'error' => 'Datos incompletos'];
             }
 
+            // 'status' se valida aparte: solo lo puede cambiar gestión/casa nacional/admin
             $camposPermitidos = [
                 'first_name', 'last_name', 'cedula', 'address_street',
                 'address_city', 'address_state', 'address_country',
-                'address_postal_code', 'description', 'porcentaje'
+                'address_postal_code', 'description', 'porcentaje',
+                'c_usuario', 'status'
             ];
 
             if (!in_array($campo, $camposPermitidos)) {
                 return ['success' => false, 'error' => 'Campo no editable'];
             }
 
-            // Validación de porcentaje máximo 100
+            if ($campo === 'status') {
+                $user = $this->getContainer()->get('user');
+                $pdoCheck = $this->getContainer()->get('entityManager')->getPDO();
+                $userInfo = $this->getUserFullInfo($user->get('id'), $pdoCheck);
+                $esAdmin = $user->isAdmin();
+                $esCN = $esAdmin || ($userInfo && $userInfo['esCasaNacional']);
+                $esGestion = $userInfo && ($userInfo['esGerente'] || $userInfo['esDirector'] || $userInfo['esCoordinador']);
+
+                if (!$esCN && !$esGestion) {
+                    return ['success' => false, 'error' => 'No tiene permisos para cambiar el estatus'];
+                }
+            }
+
+            // Validación de porcentaje: entre 0 y 35, máximo 1 decimal
             if ($campo === 'porcentaje') {
                 if ($valor === '' || $valor === null) {
                     $valor = null;
                 } else {
-                    $valor = (float)$valor;
-                    if ($valor < 0 || $valor > 100) {
-                        return ['success' => false, 'error' => 'El porcentaje debe estar entre 0 y 100'];
+                    if (!is_numeric($valor)) {
+                        return ['success' => false, 'error' => 'El porcentaje debe ser un número'];
+                    }
+                    $valor = round((float)$valor, 1);
+                    if ($valor < 0 || $valor > 35) {
+                        return ['success' => false, 'error' => 'El porcentaje debe estar entre 0% y 35%'];
                     }
                 }
             }
@@ -418,6 +450,42 @@ class Embajadores extends \Espo\Core\Controllers\Record
             $sql = "UPDATE c_ambassador SET `{$campo}` = ?, modified_at = NOW() WHERE id = ? AND deleted = 0";
             $sth = $pdo->prepare($sql);
             $sth->execute([$valor, $embajadorId]);
+
+            return ['success' => true];
+
+        } catch (\Exception $e) {
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    public function postActionGuardarPassword($params, $data, $request)
+    {
+        try {
+            $body = $request->getParsedBody();
+            if (is_object($body)) $body = (array) $body;
+
+            $embajadorId = $body['embajadorId'] ?? null;
+            $password    = $body['valor'] ?? null;
+
+            if (!$embajadorId || !$password) {
+                return ['success' => false, 'error' => 'Datos incompletos'];
+            }
+
+            // IMPORTANTE: a diferencia de guardarCampo (UPDATE SQL directo), acá se
+            // usa entityManager->saveEntity() para que SÍ dispare el Formula "Before
+            // Save Script" de CAmbassador, que es quien hashea cPassword
+            // (password\hash(...)) cuando cambia y no mide ya 60 caracteres. Un
+            // UPDATE directo lo guardaría en texto plano y rompería el login del
+            // portal de embajadores.
+            $entityManager = $this->getContainer()->get('entityManager');
+            $entity = $entityManager->getEntity('CAmbassador', $embajadorId);
+
+            if (!$entity) {
+                return ['success' => false, 'error' => 'Embajador no encontrado'];
+            }
+
+            $entity->set('cPassword', $password);
+            $entityManager->saveEntity($entity);
 
             return ['success' => true];
 

@@ -130,7 +130,7 @@ define("interfaz:views/detalle-lead", ["view"], function (Dep) {
                         ${this.renderSelectField('Interés', 'c_interes', d.cInteres, interesLabel ? interesLabel.label : d.cInteres, interesOptsHtml, true)}
                         ${this.renderField('Correo electrónico', 'c_correo', d.correo, true, 'email')}
                         ${this.renderField('Teléfono', 'c_nmero_de_contacto', d.numeroContacto, true)}
-                        ${this.renderFieldReadonly('Código', d.codigo)}
+                        ${this.renderFieldReadonly('Fecha de creación', this.formatearFecha(d.createdAt))}
                     </div>
                     ${this.renderFieldText('Descripción', 'description', d.description, true)}
                 </div>
@@ -150,7 +150,7 @@ define("interfaz:views/detalle-lead", ["view"], function (Dep) {
                         </div>
                     </div>
                     <div class="int-field">
-                        <span class="int-field-label">Usuario Asignado</span>
+                        <span class="int-field-label">Asesor Asignado</span>
                         <div class="int-tags-wrap">
                             ${d.assignedUserName
                                 ? `<span class="int-tag">${this.escapeHtml(d.assignedUserName)}</span>`
@@ -496,6 +496,13 @@ define("interfaz:views/detalle-lead", ["view"], function (Dep) {
                 <div class="int-alert int-alert-danger">
                     <i class="fas fa-exclamation-circle"></i> ${msg || 'Error desconocido'}
                 </div>`);
+        },
+
+        formatearFecha: function (fecha) {
+            if (!fecha) return null;
+            const d = new Date(String(fecha).replace(' ', 'T'));
+            if (isNaN(d.getTime())) return null;
+            return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
         },
 
         escapeHtml: function (text) {

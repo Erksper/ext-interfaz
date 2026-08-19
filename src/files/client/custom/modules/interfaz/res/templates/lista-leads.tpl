@@ -58,6 +58,14 @@
                     <option value="">Todos</option>
                 </select>
             </div>
+            <div class="int-filtro-group">
+                <label>Fecha desde</label>
+                <input type="date" id="filtro-fecha-desde" class="int-form-control">
+            </div>
+            <div class="int-filtro-group">
+                <label>Fecha hasta</label>
+                <input type="date" id="filtro-fecha-hasta" class="int-form-control">
+            </div>
         </div>
         <div class="int-filtro-actions">
             <button class="int-btn int-btn-primary" data-action="aplicar-filtros">

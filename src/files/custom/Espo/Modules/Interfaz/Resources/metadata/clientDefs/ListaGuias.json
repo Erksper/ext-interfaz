@@ -1,0 +1,17 @@
+{
+    "controller": "interfaz:controllers/lista-guias",
+    "iconClass": "fas fa-file-pdf",
+    "color": "#B8A279",
+    "checkForDuplicatesInQuickCreate": false,
+    "menu": {
+        "list": [
+            {
+                "label": "Guías",
+                "link": "#ListaGuias",
+                "acl": "read",
+                "aclScope": "ListaGuias",
+                "iconClass": "fas fa-file-pdf"
+            }
+        ]
+    }
+}
