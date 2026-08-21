@@ -330,6 +330,16 @@ class Leads extends \Espo\Core\Controllers\Record
                 return ['success' => false, 'error' => 'Lead no encontrado'];
             }
 
+            $user = $this->getContainer()->get('user');
+            $userInfo = $this->getUserFullInfo($user->get('id'), $pdo);
+            $esAdmin = $user->isAdmin();
+
+            if (!$this->puedeGestionarLead($userInfo, $esAdmin, $user->get('id'), $row['assigned_user_id'], $pdo)) {
+                return ['success' => false, 'error' => 'No tiene permisos para ver este lead'];
+            }
+
+            $puedeEditar = true; // si pudo verlo, con las nuevas reglas también puede editarlo
+
             $stageValue = $row['stage'];
             $stageLabel = $this->stageMap[$stageValue] ?? $stageValue;
 
@@ -434,6 +444,21 @@ class Leads extends \Espo\Core\Controllers\Record
             $entityManager = $this->getContainer()->get('entityManager');
             $pdo = $entityManager->getPDO();
 
+            $sthOwner = $pdo->prepare("SELECT assigned_user_id FROM opportunity WHERE id = ? AND deleted = 0 LIMIT 1");
+            $sthOwner->execute([$leadId]);
+            $ownerRow = $sthOwner->fetch(\PDO::FETCH_ASSOC);
+            if (!$ownerRow) {
+                return ['success' => false, 'error' => 'Lead no encontrado'];
+            }
+
+            $user = $this->getContainer()->get('user');
+            $userInfo = $this->getUserFullInfo($user->get('id'), $pdo);
+            $esAdmin = $user->isAdmin();
+
+            if (!$this->puedeGestionarLead($userInfo, $esAdmin, $user->get('id'), $ownerRow['assigned_user_id'], $pdo)) {
+                return ['success' => false, 'error' => 'No tiene permisos para editar este lead'];
+            }
+
             $sql = "UPDATE opportunity SET `{$campo}` = ?, modified_at = NOW() WHERE id = ? AND deleted = 0";
             $sth = $pdo->prepare($sql);
             $sth->execute([$valor, $leadId]);
@@ -464,6 +489,24 @@ class Leads extends \Espo\Core\Controllers\Record
 
             $entityManager = $this->getContainer()->get('entityManager');
             $pdo = $entityManager->getPDO();
+
+            $sthOwner = $pdo->prepare("SELECT assigned_user_id FROM opportunity WHERE id = ? AND deleted = 0 LIMIT 1");
+            $sthOwner->execute([$leadId]);
+            $ownerRow = $sthOwner->fetch(\PDO::FETCH_ASSOC);
+            if (!$ownerRow) {
+                return ['success' => false, 'error' => 'Lead no encontrado'];
+            }
+
+            $user = $this->getContainer()->get('user');
+            $userInfo = $this->getUserFullInfo($user->get('id'), $pdo);
+            $esAdmin = $user->isAdmin();
+
+            // Cualquier usuario puede actualizar el estatus de sus propios leads;
+            // gestión (gerente/director/coordinador) además los de su oficina;
+            // casa nacional/admin, todos.
+            if (!$this->puedeGestionarLead($userInfo, $esAdmin, $user->get('id'), $ownerRow['assigned_user_id'], $pdo)) {
+                return ['success' => false, 'error' => 'No tiene permisos para cambiar el estatus de este lead'];
+            }
 
             $sql = "UPDATE opportunity SET stage = ?, last_stage = stage, modified_at = NOW() WHERE id = ? AND deleted = 0";
             $sth = $pdo->prepare($sql);
@@ -599,6 +642,33 @@ class Leads extends \Espo\Core\Controllers\Record
     private function generateId()
     {
         return substr(str_replace(['+', '/', '='], '', base64_encode(random_bytes(16))), 0, 17);
+    }
+
+    // ¿Puede $userInfo (usuario logueado) ver/editar el lead asignado a $assignedUserId?
+    // Admin/Casa Nacional: todos. Gerente/Director/Coordinador: los de su oficina.
+    // Cualquier otro: solo los suyos propios (los que tiene asignados).
+    private function puedeGestionarLead($userInfo, $esAdmin, $currentUserId, $assignedUserId, $pdo)
+    {
+        if ($esAdmin || ($userInfo && $userInfo['esCasaNacional'])) {
+            return true;
+        }
+
+        if ($assignedUserId === $currentUserId) {
+            return true;
+        }
+
+        if ($userInfo && ($userInfo['esGerente'] || $userInfo['esDirector'] || $userInfo['esCoordinador'])) {
+            if (!$userInfo['oficinaId'] || !$assignedUserId) {
+                return false;
+            }
+            $sth = $pdo->prepare(
+                "SELECT 1 FROM team_user WHERE user_id = ? AND team_id = ? AND deleted = 0 LIMIT 1"
+            );
+            $sth->execute([$assignedUserId, $userInfo['oficinaId']]);
+            return (bool) $sth->fetch();
+        }
+
+        return false;
     }
 
     private function getUserFullInfo($userId, $pdo)

@@ -1,0 +1,234 @@
+/* client/custom/modules/interfaz/res/css/interfaz-copys.css */
+
+.int-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.int-copys-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.int-copy-card {
+    background: var(--int-white);
+    border-radius: 12px;
+    padding: 22px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    border: 1px solid var(--int-border);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: all 0.2s ease;
+}
+
+.int-copy-card:hover {
+    box-shadow: 0 4px 14px rgba(0,0,0,0.10);
+    transform: translateY(-2px);
+}
+
+.int-copy-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+}
+
+.int-copy-nombre {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--int-dark);
+    margin-bottom: 4px;
+}
+
+.int-copy-descripcion {
+    font-size: 13.5px;
+    color: var(--int-text-muted);
+    line-height: 1.4;
+}
+
+.int-copy-roles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.int-copy-role-tag {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    background: var(--int-light);
+    color: var(--int-text-muted);
+    padding: 3px 9px;
+    border-radius: 20px;
+}
+
+.int-copy-actions {
+    margin-top: auto;
+    display: flex;
+    gap: 8px;
+}
+
+.int-copy-actions .int-btn {
+    flex: 1;
+    justify-content: center;
+}
+
+.int-copy-actions .int-copy-edit-btn {
+    flex: 0 0 auto;
+    width: 42px;
+    padding: 0;
+}
+
+.int-copy-sin-archivo {
+    color: var(--int-text-muted);
+    font-size: 13px;
+    font-style: italic;
+    flex: 1;
+}
+
+/* Modal de subida / edición */
+.int-modal-form .form-group {
+    margin-bottom: 18px;
+}
+
+.int-modal-form label {
+    font-weight: 600;
+    color: var(--int-text);
+    font-size: 13.5px;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.int-file-name {
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--int-primary-dark);
+    font-weight: 600;
+}
+
+/* Selector de roles en el modal */
+.int-roles-selector-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.int-roles-selector-header .int-btn-link {
+    background: none;
+    border: none;
+    color: var(--int-primary-dark);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+}
+
+.int-roles-selector-header .int-btn-link:hover {
+    text-decoration: underline;
+}
+
+.int-roles-selector-lista {
+    display: block;
+    max-height: 220px;
+    overflow-y: auto;
+    border: 1px solid var(--int-border);
+    border-radius: 8px;
+    padding: 6px;
+}
+
+.int-rol-check-row-copy {
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--int-text);
+}
+
+.int-rol-check-row-copy:hover {
+    background: var(--int-light);
+}
+
+.int-rol-check-row-copy input {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+/* Modal organizar/eliminar (mismo patrón que Guías) */
+.int-organizar-hint {
+    font-size: 13px;
+    color: var(--int-text-muted);
+    background: var(--int-light);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+}
+
+.int-organizar-lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.int-organizar-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--int-white);
+    border: 1px solid var(--int-border);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    cursor: grab;
+    transition: box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.int-organizar-row:active {
+    cursor: grabbing;
+}
+
+.int-organizar-row.dragging {
+    opacity: 0.4;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.int-organizar-handle {
+    color: var(--int-text-muted);
+    font-size: 15px;
+}
+
+.int-organizar-nombre {
+    flex: 1;
+    font-weight: 600;
+    color: var(--int-text);
+    font-size: 14px;
+}
+
+.int-organizar-eliminar {
+    border: none;
+    background: transparent;
+    color: var(--int-danger);
+    font-size: 15px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.int-organizar-eliminar:hover {
+    background: rgba(231, 76, 60, 0.1);
+}

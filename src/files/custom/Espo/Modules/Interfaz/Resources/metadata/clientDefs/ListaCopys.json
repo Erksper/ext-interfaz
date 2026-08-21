@@ -1,0 +1,17 @@
+{
+    "controller": "interfaz:controllers/lista-copys",
+    "iconClass": "fas fa-copy",
+    "color": "#B8A279",
+    "checkForDuplicatesInQuickCreate": false,
+    "menu": {
+        "list": [
+            {
+                "label": "Copys",
+                "link": "#ListaCopys",
+                "acl": "read",
+                "aclScope": "ListaCopys",
+                "iconClass": "fas fa-copy"
+            }
+        ]
+    }
+}

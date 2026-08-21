@@ -114,9 +114,10 @@ define("interfaz:views/detalle-lead", ["view"], function (Dep) {
                     <div class="int-avatar-username-label">Asesor Asignado</div>
                     <div class="int-avatar-username">${this.escapeHtml(d.assignedUserName || '—')}</div>
                     <div class="int-avatar-badges">
-                        <span class="int-badge" style="background:${stageColor};color:white;">
+                        <button type="button" class="int-badge int-badge-toggle" id="int-btn-badge-stage"
+                            style="background:${stageColor};color:white;" title="Clic para cambiar el estatus">
                             ${this.escapeHtml(d.stageLabel || '—')}
-                        </span>
+                        </button>
                     </div>
                 </div>
 
@@ -331,6 +332,16 @@ define("interfaz:views/detalle-lead", ["view"], function (Dep) {
 
             container.find('#btn-volver').on('click', function () {
                 self.getRouter().navigate('#ListaLeads', { trigger: true });
+            });
+
+            // El badge de arriba es un atajo: abre el campo "Estado" editable de la
+            // grilla (mismo control, mismo permiso, sin duplicar lógica).
+            container.on('click', '#int-btn-badge-stage', function () {
+                const fieldEl = container.find('.int-field[data-campo="stage"]');
+                fieldEl.find('.int-field-view-mode').addClass('hidden');
+                fieldEl.find('.int-field-edit-mode').addClass('active');
+                fieldEl.get(0).scrollIntoView({ behavior: 'smooth', block: 'center' });
+                fieldEl.find('.int-field-input').first().focus();
             });
 
             container.on('click', '.int-field-edit-btn', function () {

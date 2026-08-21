@@ -4,10 +4,13 @@
         "Lista de Usuarios": "Lista de Usuarios",
         "ListaUsuarios": "Lista de Usuarios",
         "Guías": "Guías",
-        "ListaGuias": "Guías"
+        "ListaGuias": "Guías",
+        "Copys": "Copys",
+        "ListaCopys": "Copys"
     },
     "messages": {
         "No se encontraron usuarios": "No se encontraron usuarios con los filtros seleccionados",
-        "No se encontraron guías": "Aún no se han subido guías o documentos"
+        "No se encontraron guías": "Aún no se han subido guías o documentos",
+        "No se encontraron copys": "Aún no hay documentos visibles para tu rol"
     }
 }

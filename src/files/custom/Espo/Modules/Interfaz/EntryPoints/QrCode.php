@@ -21,10 +21,17 @@ class QrCode implements EntryPoint
     public function run(Request $request, Response $response): void
     {
         $userId = $request->getQueryParam('userId');
+        $ambassadorId = $request->getQueryParam('ambassadorId');
         $tipo   = $request->getQueryParam('tipo') ?: 'user';
         $texto  = $request->getQueryParam('texto');
 
-        if ($userId && !$texto) {
+        // Para embajadores, el frontend manda userId (el asesor asignado) Y
+        // ambassadorId (el id real del embajador). El id que hay que buscar en
+        // c_ambassador es ambassadorId, no userId (userId apunta a la tabla user,
+        // por eso siempre daba 404 para embajadores).
+        $idBusqueda = ($tipo === 'ambassador') ? $ambassadorId : $userId;
+
+        if ($idBusqueda && !$texto) {
             $pdo = $this->entityManager->getPDO();
 
             if ($tipo === 'ambassador') {
@@ -37,7 +44,7 @@ class QrCode implements EntryPoint
                 );
             }
 
-            $sth->execute([$userId]);
+            $sth->execute([$idBusqueda]);
             $row = $sth->fetch(\PDO::FETCH_ASSOC);
             $texto = $row['qr'] ?? null;
         }

@@ -5,7 +5,8 @@
         "Reportes9Meses": "Reportes 9 Meses",
         "ReportesTrimestrales": "Reportes Trimestrales",
         "ReportesLatam": "Reporte LATAM",
-        "ListaGuias": "Guías"
+        "ListaGuias": "Guías",
+        "ListaCopys": "Copys"
     },
     "scopeNamesPlural": {
         "Reportes3Meses": "Reportes 3 Meses",
@@ -13,6 +14,7 @@
         "Reportes9Meses": "Reportes 9 Meses",
         "ReportesTrimestrales": "Reportes Trimestrales",
         "ReportesLatam": "Reportes LATAM",
-        "ListaGuias": "Guías"
+        "ListaGuias": "Guías",
+        "ListaCopys": "Copys"
     }
 }

@@ -214,6 +214,7 @@ class Usuarios extends \Espo\Core\Controllers\Record
                         AND pn.deleted = 0
                     WHERE u.deleted = 0
                     AND u.type != 'admin'
+                    AND u.type != 'api'
                     AND u.id != 'system'
                     AND LOWER(COALESCE(u.user_name,'')) != 'system'
                     AND LOWER(CONCAT(COALESCE(u.first_name,''), ' ', COALESCE(u.last_name,''))) NOT LIKE '%por la casa%'
