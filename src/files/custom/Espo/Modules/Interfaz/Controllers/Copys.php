@@ -90,7 +90,7 @@ class Copys extends \Espo\Core\Controllers\Record
                     'archivoSize'   => $row['archivo_size'] !== null ? (int) $row['archivo_size'] : null,
                     'archivoTipo'   => $row['archivo_tipo'],
                     'downloadUrl'   => $row['archivo_id']
-                        ? $siteUrl . '/?entryPoint=download&id=' . $row['archivo_id']
+                        ? $siteUrl . '/?entryPoint=copyDescargar&id=' . $row['id']
                         : null,
                 ];
             }
@@ -189,7 +189,7 @@ class Copys extends \Espo\Core\Controllers\Record
                     'archivoNombre' => $name,
                     'archivoSize'   => (int) $file['size'],
                     'archivoTipo'   => $type,
-                    'downloadUrl'   => $siteUrl . '/?entryPoint=download&id=' . $attachmentId,
+                    'downloadUrl'   => $siteUrl . '/?entryPoint=copyDescargar&id=' . $copy->getId(),
                 ],
             ];
 
@@ -302,7 +302,7 @@ class Copys extends \Espo\Core\Controllers\Record
                 'descripcion' => $descripcion,
                 'roles'       => $this->parseRoles($rolesLimpios),
                 'downloadUrl' => $archivoIdFinal
-                    ? $siteUrl . '/?entryPoint=download&id=' . $archivoIdFinal
+                    ? $siteUrl . '/?entryPoint=copyDescargar&id=' . $id
                     : null,
             ];
 

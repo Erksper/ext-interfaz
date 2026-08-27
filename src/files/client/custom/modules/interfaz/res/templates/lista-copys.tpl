@@ -12,7 +12,7 @@
                 <i class="fas fa-copy"></i>
             </div>
             <div>
-                <h1 class="int-page-title">Copys</h1>
+                <h1 class="int-page-title">Documentos procesos de Reclutamiento y Selección</h1>
                 <p class="int-page-subtitle">Documentos y materiales disponibles según tu rol</p>
             </div>
         </div>
