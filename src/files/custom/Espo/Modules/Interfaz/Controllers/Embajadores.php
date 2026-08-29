@@ -447,6 +447,28 @@ class Embajadores extends \Espo\Core\Controllers\Record
             $entityManager = $this->getContainer()->get('entityManager');
             $pdo = $entityManager->getPDO();
 
+            // El usuario del embajador debe ser único (el login del portal busca
+            // por cUsuario con findOne(), así que un duplicado haría que siempre
+            // entre al primero que encuentre, sin importar cuál embajador sea).
+            if ($campo === 'c_usuario') {
+                $valorLimpio = trim((string) $valor);
+
+                if ($valorLimpio === '') {
+                    return ['success' => false, 'error' => 'El usuario no puede estar vacío'];
+                }
+
+                $sthDup = $pdo->prepare(
+                    "SELECT id FROM c_ambassador WHERE LOWER(c_usuario) = LOWER(?) AND id != ? AND deleted = 0 LIMIT 1"
+                );
+                $sthDup->execute([$valorLimpio, $embajadorId]);
+
+                if ($sthDup->fetch()) {
+                    return ['success' => false, 'error' => 'Ese nombre de usuario ya está en uso por otro embajador'];
+                }
+
+                $valor = $valorLimpio;
+            }
+
             $sql = "UPDATE c_ambassador SET `{$campo}` = ?, modified_at = NOW() WHERE id = ? AND deleted = 0";
             $sth = $pdo->prepare($sql);
             $sth->execute([$valor, $embajadorId]);

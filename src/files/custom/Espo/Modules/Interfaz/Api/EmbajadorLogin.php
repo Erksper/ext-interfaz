@@ -63,30 +63,39 @@ class EmbajadorLogin implements Action
             return ResponseComposer::json(['success' => false]);
         }
 
-        // Resolvemos el nombre de la oficina aquí mismo (acceso interno),
-        // así la API key pública no necesita permiso de lectura sobre Team.
+        // Resolvemos el nombre de la oficina y los datos del asesor asignado
+        // acá mismo (acceso interno vía EntityManager), así la API key pública
+        // del portal no necesita permiso de lectura sobre Team/User.
+        //
+        // OJO: la oficina NO sale de los equipos del propio embajador — CAmbassador
+        // no tiene esa relación poblada. La oficina real es la del ASESOR asignado
+        // (mismo criterio que usa Usuarios::getUserFullInfo en el panel admin):
+        // se toma el primer equipo del asesor que no sea un CLA (patrón "CLA123")
+        // ni el equipo genérico "venezuela".
         $oficina = null;
-        $teamIds = $embajador->get('teamsIds') ?? [];
-        if (!empty($teamIds[0])) {
-            $team = $this->entityManager->getEntity('Team', $teamIds[0]);
-            if ($team) {
-                $oficina = $team->get('name');
-            }
-        }
-
-        // Igual que con la oficina: resolvemos el asesor asignado (nombre y
-        // teléfono) acá adentro, con acceso interno directo a EntityManager, para
-        // no tener que darle a la API key pública del portal permiso de lectura
-        // sobre User (que expondría de más). El portal usa esto para el botón
-        // "Contactar al asesor".
         $asesorNombre = null;
         $asesorTelefono = null;
         $assignedUserId = $embajador->get('assignedUserId');
+
         if ($assignedUserId) {
             $asesorUser = $this->entityManager->getEntity('User', $assignedUserId);
+
             if ($asesorUser) {
                 $asesorNombre = $asesorUser->get('name');
                 $asesorTelefono = $asesorUser->get('phoneNumber');
+
+                $teamIds = $asesorUser->get('teamsIds') ?? [];
+                $claPattern = '/^CLA\d+$/i';
+
+                foreach ($teamIds as $teamId) {
+                    if (!preg_match($claPattern, $teamId) && strtolower($teamId) !== 'venezuela') {
+                        $team = $this->entityManager->getEntity('Team', $teamId);
+                        if ($team) {
+                            $oficina = $team->get('name');
+                        }
+                        break;
+                    }
+                }
             }
         }
 
